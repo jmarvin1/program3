@@ -1,0 +1,10 @@
+James Marvin (jmarvin1)
+Michael Burke (mburke18)
+William Theisen (wtheisen) 
+
+How to run the code: 
+
+1. enter the command 	make
+2. to start the server on one machine run the command 	./myftpd [Port]
+3. to start the client on another machine run the command ./myftp Server_Name [Port] 
+ 
