@@ -34,7 +34,8 @@ int upload(int client)
 {
     int i = 0;
     char* input[4];
-
+    
+    printf("yo we recieving first stuff\n");
     recieveData(client, input[0]);
 
     char* args[4], token = strtok(input[1], ",");
@@ -43,7 +44,9 @@ int upload(int client)
 
     short fNameSize = ntohs(atoi(args[0]));
 
+    printf("we sending an ack\n");
     sendData(client, "ACK");
+    printf("we receiving data\n");
     recieveData(client, input[1]);
 
     long fSize = ntohl(atoi(input[1]));
