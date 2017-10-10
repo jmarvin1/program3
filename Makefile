@@ -1,6 +1,6 @@
-all: 
-	gcc server.c -o myftpd
-	gcc client.c -o myftp
+all:
+	gcc server.c -Wall -o myftpd
+	gcc client.c -Wall -o myftp
 
 clean:
 	rm myftpd myftp
