@@ -12,39 +12,155 @@
 int dwld(int s)
 {
     size_t sizeInput;
-    char * inputFile;
+    char  inputFile [BUFFER];
     
     printf("Enter the file to download\n");
-    int bytes = getline(&inputFile, &sizeInput, stdin);
+    scanf("%s\0", inputFile);
     
-    char * fSize;
-    
-    sprintf(fSize, "%d", bytes);
-
-    int sizeSent;
-
+    char fSize [BUFFER];
+    sprintf(fSize, "%d", strlen(inputFile));
     char action [BUFFER];
-    printf("string copy\n");
-    strcpy(action, "DWLD ");
-    strcpy(action, fSize);
-    strcpy(action, " ");
-    strcpy(action, inputFile);
 
-    printf("sending string: %s\n", inputFile);
+    strcat(action, "DWLD ");
+    strcat(action, fSize);
+    strcat(action, " ");
+    strcat(action, inputFile);
 
+    printf("sending string: %s\n", action);
 
-    //sprintf(message, "%s %d %s", action, sizeof(inputFile), inputFile);
-    printf("message:\n%s", message);
-    char * action = "DWLD,10,test.txt\0";
     int sizeSent;
-    if ((sizeSent = send(s, action, BUFFER, 0)) < 0)
+    if ((sizeSent = send(s, action, strlen(action), 0)) < 0)
     {
         perror("Error sending message\n");
         close(s);
         exit(1);
     }
+    int rSize;
+    char rBuffer[BUFFER];
+    if ((rSize = recv(s, rBuffer, BUFFER, 0)) < 0) 
+    {
+        perror("Error receiving message after DWLD sent\n");
+        close(s);
+        exit(1);
+    }
+
+
     return 0;
 
+}
+
+
+int upld(int s)
+{
+    size_t sizeInput;
+    char uploadFile [BUFFER];
+    
+    printf("Enter the file to upload\n");
+    
+    scanf("%s\0", uploadFile); 
+    
+    printf("yeet: %s\n", uploadFile);
+    if( access( uploadFile, F_OK ) != 0 ) 
+    {
+        printf("file does not exist\n");
+        exit(1);
+    } 
+    
+    FILE *fp = NULL;
+    fp = fopen(uploadFile, "r");
+    
+    if (fp == NULL)
+    {
+        fprintf(stderr, "cannot open file\n");
+        close(s);
+        exit(1);
+    }
+    fseek(fp, 0, SEEK_END);
+    long fSize = ftell(fp);
+    fseek(fp, 0, SEEK_SET); 
+    
+    char *buf = malloc(fSize + 1);
+    
+    size_t bRead = fread(buf, fSize, 1, fp);
+    if (bRead > 0) {
+        printf("read was successful\n"); 
+        buf[fSize] = '\0';
+    }
+    else {
+        printf("read is wrong\n");
+        exit(1);
+    }
+  
+    int sizeSent;
+    
+    char action [BUFFER] = "UPLD\0";
+    if ((sizeSent = send(s, action, strlen(action), 0)) < 0)
+    {
+        perror("Error sending action\n");
+        close(s);
+        free(buf);
+        fclose(fp);
+        exit(1);
+    }
+
+    char sizeName [BUFFER];
+    sprintf(sizeName, "%d\0", strlen(uploadFile));
+    strcat(sizeName, ",");
+    strcat(sizeName, uploadFile);
+    strcat(sizeName, "\0");
+    if ((sizeSent = send(s, sizeName, strlen(sizeName), 0)) < 0)
+    {
+        perror("Error sending sizeName\n");
+        close(s);
+        free(buf);
+        fclose(fp);
+        exit(1);
+    }
+
+    int rSize;
+    char rBuffer[BUFFER];
+    if ((rSize = recv(s, rBuffer, BUFFER, 0)) < 0) 
+    {
+        perror("Error receiving ACK about UPLD fileSize\n");
+        close(s);
+        exit(1);
+    }
+
+    if (strcmp(rBuffer, "letsgo") == 0)
+    { 
+        char sizeFile [BUFFER];
+        sprintf(sizeFile, "%d\0", fSize + 1);
+        if ((sizeSent = send(s, sizeFile, strlen(sizeFile), 0)) < 0)
+        {
+            perror("Error sending sizeFile\n");
+            close(s);
+            free(buf);
+            fclose(fp);
+            exit(1);
+        }
+        if ((sizeSent = send(s, buf, fSize + 1, 0)) < 0)
+        {
+            perror("Error sending UPLD file\n");
+            close(s);
+            free(buf);
+            fclose(fp);
+            exit(1);
+        }
+    }
+
+    char rBuffer1[BUFFER];
+    if ((rSize = recv(s, rBuffer1, BUFFER, 0)) < 0) 
+    {
+        perror("Error receiving ACK about UPLD file\n");
+        close(s);
+        exit(1);
+    }
+
+    printf("We did it!\n%s\n", rBuffer1);
+
+    free(buf);
+    fclose(fp);
+    return 1;
 }
 
 int main(int argc, char * argv[])
@@ -97,7 +213,7 @@ int main(int argc, char * argv[])
 		close(s);
 		exit(1);
 	}
-
+    int yo = 0;
     while (1) 
     {
         printf("Enter a command to perform:\n\t");
@@ -106,63 +222,46 @@ int main(int argc, char * argv[])
         printf("Change Directory\n\tDELF: Delete File\n\tQUIT: Exit\n");
         
         size_t sizeInput;
-        char * inputAction;
-        int bytes = getline(&inputAction, &sizeInput, stdin);
-        
-        if (!bytes) {
-            fprintf(stderr, "Error reading input\n");
-            exit(1);
-        }
-        else if (bytes != 5) {
-            printf("Incorrect action: try again\n");
-        }
-        else if (strcmp(inputAction, "DWLD\n") == 0)
+        char inputAction [BUFFER];
+        scanf("%s\0", inputAction);
+        if (strcmp(inputAction, "DWLD") == 0)
         {
             printf("DWLD\n");
             dwld(s);
         }
-        else if (strcmp(inputAction, "UPLD\n") == 0)
+        else if (strcmp(inputAction, "UPLD") == 0)
         {
             printf("UPLD\n");
+            upld(s);
         } 
-        else if (strcmp(inputAction, "LIST\n") == 0)
+        else if (strcmp(inputAction, "LIST") == 0)
         {
             printf("LIST\n");
         } 
-        else if (strcmp(inputAction, "MDIR\n") == 0)
+        else if (strcmp(inputAction, "MDIR") == 0)
         {
             printf("MDIR\n");
         } 
-        else if (strcmp(inputAction, "RDIR\n") == 0)
+        else if (strcmp(inputAction, "RDIR") == 0)
         {
             printf("RDIR\n");
         } 
-        else if (strcmp(inputAction, "CDIR\n") == 0)
+        else if (strcmp(inputAction, "CDIR") == 0)
         {
             printf("CDIR\n");
         } 
-        else if (strcmp(inputAction, "DELF\n") == 0)
+        else if (strcmp(inputAction, "DELF") == 0)
         {
             printf("DELF\n");
         } 
-        else if (strcmp(inputAction, "QUIT\n") == 0)
+        else if (strcmp(inputAction, "QUIT") == 0)
         {
-            printf("QUIT\n");
+            close(s);
             return 0;
         } else {
             printf("error: improper action: try again\n");
         } 
-
-        printf("Action: %s\n", inputAction);
-        
-        char *message = "DWLD 10 test.txt ";
-        int sizeSent;
-        if ((sizeSent = send(s, message, sizeof(message), 0)) < 0)
-        {
-            perror("Error sending message\n");
-            close(s);
-            exit(1);
-        }
-       return 1; 
-    }	
+    }
+    close(s);
+    return 0;    
 }
