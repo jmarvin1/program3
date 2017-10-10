@@ -105,12 +105,16 @@ int upld(int s)
 
     char sizeName [BUFFER];
     short int tmpShort = (short int)strlen(uploadFile);
+    printf("uploadFile: %d\n", strlen(uploadFile));
+    printf("tmpShort: %hu\n", tmpShort);
     uint16_t sizeOfName = htons(tmpShort);
     
     sprintf(sizeName, "%" PRIu16, sizeOfName);
     strcat(sizeName, ",");
     strcat(sizeName, uploadFile);
     strcat(sizeName, "\0");
+    printf("sizeName: %s\n", sizeName);
+    
     if ((sizeSent = send(s, sizeName, strlen(sizeName), 0)) < 0)
     {
         perror("Error sending sizeName\n");
