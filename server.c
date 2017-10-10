@@ -129,7 +129,7 @@ int main(int argc, char *argv[])
                 break;
             }
 
-            command[i] = buf;
+            command[i] = strdup(buf);
             printf("%s\n", command[i]);
 
             if (i == 1 || i == 3) {
