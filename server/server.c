@@ -10,6 +10,7 @@
 #include <assert.h>
 #include <sys/stat.h>
 #include <stdint.h>
+#include <inttypes.h>
 //Ports we can use 41028, 41029, 41030
 #define MAX_PENDING 10
 #define BUFFER 8128
@@ -22,54 +23,76 @@ int recieveData(int client, char* buf, int len)
 
 int download(int client)
 {
-
-    char meow[256];
-    bzero(meow, sizeof(meow));
-    printf("recieve 1\n");
-    recieveData(client, meow, sizeof(meow));
+    char fileNameSize[256];
+    bzero(fileNameSize, strlen(fileNameSize));
+    recieveData(client, fileNameSize, strlen(fileNameSize));
 
     int i = 0;
-    char* args[2], token = strtok(meow, ",");
+    char* args[2];
+    char* token = strtok(fileNameSize, ",");
     while (token != NULL)
         { args[i] = strdup(token); i++; token=strtok(NULL, ","); }
 
-    return 1;
+    short fNameSize = ntohs(atoi(args[0]));
+
+    if (access(args[1], F_OK) == -1 ) {
+        sendData(client, "-1", strlen("-1"));
+        return 1;
+    }
+
+    FILE *fp = fopen(args[1], "w");
+
+    fseek(fp, 0, SEEK_END);
+    uint32_t fSize = ftell(fp);
+    fseek(fp, 0, SEEK_SET);
+
+    fSize = htonl(fSize);
+    char sizeFile[BUFFER];
+
+    sprintf(sizeFile, "%" PRIu32, fSize);
+    sendData(client, sizeFile, strlen(sizeFile));
+
+    char fileData[fSize];
+    fread(fileData, fSize, 1, fp);
+
+    sendData(client, fileData, strlen(fileData));
+
+    return fclose(fp);
 }
 
 int upload(int client)
 {
-    char meow[256];
-    bzero(meow, strlen(meow));
-    printf("recieve 1\n");
-    recieveData(client, meow, 256);
-    printf("yo\n");
-    int i = 0;
+    char fileNameSize[256];
+    bzero(fileNameSize, strlen(fileNameSize));
+    recieveData(client, fileNameSize, strlen(fileNameSize));
 
-    printf("%s\n", meow);
-    
-    char *test = strdup(meow);
-    char* args[4], token = strtok(test, ",");
+    int i = 0;
+    char* args[2];
+    char* token = strtok(fileNameSize, ",");
     while (token != NULL)
         { args[i] = strdup(token); i++; token=strtok(NULL, ","); }
 
-    //short fNameSize = ntohs(atoi(args[0]));
+    short fNameSize = ntohs(atoi(args[0]));
 
-    printf("recieve 2\n");
-   // char *test = "ACK\0";
-    //sendData(client, test, strlen(test));
+    sendData(client, "ACK", strlen("ACK"));
 
-    /* recieveData(client, input[1]); */
+    char fileSize[256];
+    bzero(fileSize, strlen(fileSize));
+    recieveData(client, fileSize, strlen(fileSize));
 
-    /* long fSize = ntohl(atoi(input[1])); */
-    /* recieveData(client, input[2]); */
+    long fSize = ntohl(atoi(fileSize));
 
-    /* FILE *fp = fopen(args[1], "w"); */
-    /* if (fwrite(input[2], 1, fSize, fp) != fSize) { */
-    /*     printf("ERROR: UPLD: write error\n"); */
-    /*     exit(1); */
-    /* } */
-    /* return fclose(fp); */
-    return 1;
+    char fileData[fSize];
+    bzero(fileData, strlen(fileData));
+    recieveData(client, fileData, fSize);
+
+    FILE *fp = fopen(args[1], "w");
+    if (fwrite(fileData, 1, fSize, fp) != fSize) {
+        printf("ERROR: UPLD: write error\n");
+        exit(1);
+    }
+
+    return fclose(fp);
 }
 
 int main(int argc, char *argv[])
