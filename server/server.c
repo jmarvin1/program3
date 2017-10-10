@@ -19,7 +19,7 @@ int sendData(int client, char* data, int len)
 { return send(client, data, len, 0); }
 
 int recieveData(int client, char* buf, int len)
-{ return recv(client, buf, len, 0); }
+{ if (recv(client, buf, len, 0) < 0) {printf("ERROR: recieve\n");} }
 
 int download(int client)
 {
