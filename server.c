@@ -132,15 +132,15 @@ int main(int argc, char *argv[])
             command[i] = buf;
             printf("%s\n", command[i]);
 
-            if (i == 1) {
+            if (i == 1 || i == 3) {
                 if ((send(s2, "ACK", strlen("ACK"), 0)) < 0) {
                     printf("ERROR: send\n");
                     exit(1);
                 }
             }
 
-            if (!strcmp(command[0], "DWLD") && i == 4) { break; }
-            else if (!strcmp(command[0], "UPLD") && i == 4) { break; }
+            if (!strcmp(command[0], "DWLD") && i == 3) { break; }
+            else if (!strcmp(command[0], "UPLD") && i == 3) { break; }
         }
 
         char* args[4];
