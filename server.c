@@ -129,7 +129,8 @@ int main(int argc, char *argv[])
             command[i] = buf;
             printf("%s\n", command[i]);
             if (i == 1) {
-                if ((send(s, "ACK", strlen("ACK"), 0)) < 0) {
+                char* test = "ACK";
+                if ((send(s2, test, strlen(test), 0)) < 0) {
                     printf("ERROR: send\n");
                     exit(1);
                 }
