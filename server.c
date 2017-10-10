@@ -126,21 +126,31 @@ int main(int argc, char *argv[])
             if(len==0) {
                 break;
             }
+
             command[i] = buf;
             printf("%s\n", command[i]);
+
             if (i == 1) {
-                char* test = "ACK";
-                if ((send(s2, test, strlen(test), 0)) < 0) {
+                if ((send(s, "ACK", strlen("ACK"), 0)) < 0) {
                     printf("ERROR: send\n");
                     exit(1);
                 }
             }
+
+            if (!strcmp(command[0], "DWLD") && i == 4) { break; }
+            else if (!strcmp(command[0], "UPLD") && i == 4) { break; }
         }
 
-		/* int32_t fsize; */
+        char* args[4];
+        i = 0;
+        char* token;
+        while ((token = strsep(command[1], ","))) args[i]=token && i++;
+
+        printf("%s\n", args[0]);
+        printf("%s\n", args[1]);
 
 		/* if(strcmp(command,"DWLD")==0) { */
-            /* if (!download(fname, fsize)) { */
+            /* if (!download(command[1], fsize)) { */
                 /* printf("ERROR: download error\n"); */
             /* } */
         /* } */
