@@ -6,6 +6,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h>
+#include <unistd.h>
 //Ports we can use 41028, 41029, 41030
 #define MAX_PENDING 10
 #define BUFFER 8128
@@ -35,8 +36,7 @@ int main(int argc, char *argv[])
 	sin.sin_port=htons(port);
 	
 	//create socket
-	s = socket(PF_INET, SOCK_STREAM, 0);
-    if(s<0)
+	if(((s=socket(PF_INET, SOCK_STREAM,0))<0))
 	{
 		perror("error creating socket");
 		exit(1);
