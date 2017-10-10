@@ -14,46 +14,47 @@
 #define MAX_PENDING 10
 #define BUFFER 8128
 
-enum action {
-    DWLD,
-    UPLD,
-    DELF,
-    LIST,
-    MDIR,
-    RDIR,
-    CDIR,
-    QUIT
-};
+int sendData(int client, char* data)
+{ return send(client, data, strlen(data), 0); }
 
-int download(char* command[])
+int recieveData(int client, char * buf)
+{ return recv(client, buf, sizeof(buf), 0); }
+
+int download(int client)
 {
-    char* args[4];
-    int i = 0;
-    char* token = strtok(command[1], ",");
-    while (token != NULL)
-        {args[i] = strdup(token); i++; token=strtok(NULL, ",");}
+    /* int i = 0; */
+    /* char* args[4], token = strtok(command[1], ","); */
+    /* while (token != NULL) */
+    /*     { args[i] = strdup(token); i++; token=strtok(NULL, ","); } */
 
     return 1;
 }
 
-int upload(char*  command[])
+int upload(int client)
 {
-    char* args[4];
     int i = 0;
-    char* token = strtok(command[1], ",");
+    char* input[4];
+
+    recieveData(client, input[0]);
+
+    char* args[4], token = strtok(input[1], ",");
     while (token != NULL)
-        {args[i] = strdup(token); i++; token=strtok(NULL, ",");}
+        { args[i] = strdup(token); i++; token=strtok(NULL, ","); }
 
     short fNameSize = ntohs(atoi(args[0]));
-    long fSize = ntohl(atoi(command[2]));
+
+    sendData(client, "ACK");
+    recieveData(client, input[1]);
+
+    long fSize = ntohl(atoi(input[1]));
+    recieveData(client, input[2]);
 
     FILE *fp = fopen(args[1], "w");
-    if (fwrite(command[3], 1, fSize, fp) != fSize) {
+    if (fwrite(input[2], 1, fSize, fp) != fSize) {
         printf("ERROR: UPLD: write error\n");
+        exit(1);
     }
-    fclose(fp);
-
-    return 1;
+    return fclose(fp);
 }
 
 int main(int argc, char *argv[])
@@ -119,35 +120,16 @@ int main(int argc, char *argv[])
 			exit(1);
 		}
 
-        int i;
-        char* command[10];
-        int fSize = 0;
+        bzero(buf, strlen(buf));
 
-        for (i = 0; i > -1; i++) {
-            bzero(buf, strlen(buf));
-
-            if((len=recv(s2, buf, sizeof(buf), 0))==-1) {
-                perror("ERROR: receiving message");
-                exit(1);
-            }
-            if(len==0) {
-                break;
-            }
-
-            command[i] = strdup(buf);
-
-            if (i == 1 || i == 3) {
-                if ((send(s2, "ACK", strlen("ACK"), 0)) < 0) {
-                    printf("ERROR: send\n");
-                    exit(1);
-                }
-            }
-
-            if (!strcmp(command[0], "DWLD") && i == 3)
-                { download(command); break; }
-            else if (!strcmp(command[0], "UPLD") && i == 3)
-                { upload(command); break; }
+        if (recieveData(s2, buf) < 0) {
+            printf("ERROR: recieving\n");
+            exit(1);
         }
+
+        if (!strcmp(buf, "DWLD")) { download(s2); }
+        else if (!strcmp(buf, "UPLD")) { upload(s2); }
+
 		close(s2);
 	}
 }
