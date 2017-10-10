@@ -35,7 +35,8 @@ int main(int argc, char *argv[])
 	sin.sin_port=htons(port);
 	
 	//create socket
-	if((s=socket(PF_INET, SOCK_STREAM,0)<0))
+	s = socket(PF_INET, SOCK_STREAM, 0);
+    if(s<0)
 	{
 		perror("error creating socket");
 		exit(1);
