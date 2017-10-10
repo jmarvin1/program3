@@ -56,17 +56,18 @@ int upload(int client)
 
     sendData(client, "ACK");
 
-    recieveData(client, input[1]);
+    /* recieveData(client, input[1]); */
 
-    long fSize = ntohl(atoi(input[1]));
-    recieveData(client, input[2]);
+    /* long fSize = ntohl(atoi(input[1])); */
+    /* recieveData(client, input[2]); */
 
-    FILE *fp = fopen(args[1], "w");
-    if (fwrite(input[2], 1, fSize, fp) != fSize) {
-        printf("ERROR: UPLD: write error\n");
-        exit(1);
-    }
-    return fclose(fp);
+    /* FILE *fp = fopen(args[1], "w"); */
+    /* if (fwrite(input[2], 1, fSize, fp) != fSize) { */
+    /*     printf("ERROR: UPLD: write error\n"); */
+    /*     exit(1); */
+    /* } */
+    /* return fclose(fp); */
+    return 1;
 }
 
 int main(int argc, char *argv[])
