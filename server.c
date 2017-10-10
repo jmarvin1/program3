@@ -145,11 +145,10 @@ int main(int argc, char *argv[])
 
         char* args[4];
         i = 0;
-        char* token = strtok(command[1], ",");
-        while (token != NULL) {printf("%s\n", token); token=strtok(NULL, ",");}
+        while ((args[i]=strdup(strsep(command[1], ",")))) i++;
 
-        /* printf("%s\n", args[0]); */
-        /* printf("%s\n", args[1]); */
+        printf("%s\n", args[0]);
+        printf("%s\n", args[1]);
 
 		/* if(strcmp(command,"DWLD")==0) { */
             /* if (!download(command[1], fsize)) { */
