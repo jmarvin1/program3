@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+//#include <unistd.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -10,8 +11,8 @@
 
 int main(int argc, char * argv[])
 {
-	File *fp;
-	struct hostnet *hp;
+	FILE *fp;
+	struct hostent *hp;
 	struct sockaddr_in sin;
 	char *host;
 	char buf[BUFFER];
