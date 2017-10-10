@@ -8,48 +8,77 @@
 #include <netinet/in.h>
 #include <netdb.h>
 #include <inttypes.h>
-
+#include <ctype.h>
 #define BUFFER 8128
 
+/*unsigned int convert(char *st) {
+  char *x;
+  for (x = st ; *x ; x++) {
+      if (!isdigit(*x))
+        return 0L;
+    }
+  return (strtoul(st, 0L, 10));
+}
+*/
 int dwld(int s)
 {
-    char  inputFile [BUFFER];
-    
+    char  inputFile [BUFFER];   
     printf("Enter the file to download\n");
     scanf("%s", inputFile);
     
-    char action [BUFFER] = "DWLD\0";
-
-    char sizeName [BUFFER];
-    short int tmpShort = (short int)strlen(inputFile);
-    uint16_t sizeOfName = htons(tmpShort); 
-    sprintf(sizeName, "%" PRIu16, sizeOfName);
-
-    strcat(sizeName, " ");
-    strcat(sizeName, inputFile);
-
     int sizeSent;
+    char action [BUFFER] = "DWLD\0";
     if ((sizeSent = send(s, action, strlen(action), 0)) < 0)
     {
         perror("Error sending action DWLD\n");
         close(s);
         exit(1);
     }
+
+    char sizeName [BUFFER];
+    short int tmpShort = (short int)strlen(inputFile);
+    uint16_t sizeOfName = htons(tmpShort);
+
+    sprintf(sizeName, "%" PRIu16, sizeOfName);
+    strcat(sizeName, " ");
+    strcat(sizeName, inputFile);
     if ((sizeSent = send(s, sizeName, strlen(sizeName), 0)) < 0)
     {
         perror("Error sending sizeName\n");
         close(s);
         exit(1);
     }
+
     int rSize;
-    char rBuffer[BUFFER];
-    
+    char rBuffer[BUFFER]; 
     if ((rSize = recv(s, rBuffer, BUFFER, 0)) < 0) 
     {
         perror("Error receiving message after DWLD sent\n");
         close(s);
         exit(1);
     }
+
+    long fSize = ntohl(atoi(rBuffer));
+    if (fSize < 0)
+    {
+        exit(1);
+    }
+    char fBuffer[(int)fSize];
+    if ((rSize = recv(s, fBuffer, fSize, 0)) < 0) 
+    {
+        perror("Error receiving message after DWLD sent\n");
+        close(s);
+        exit(1);
+    }
+
+    FILE *fp = fopen(inputFile, "w");
+    if (fwrite(fBuffer, 1, fSize, fp) != fSize) {
+        perror("ERROR: UPLD: write error\n");
+        close(s);
+        fclose(fp);
+        exit(1);
+    }
+    fclose(fp);
 
     return 0;
 }
@@ -70,8 +99,7 @@ int upld(int s)
         exit(1);
     } 
     
-    FILE *fp = NULL;
-    fp = fopen(uploadFile, "r");
+    FILE *fp = fopen(uploadFile, "r");
     
     if (fp == NULL)
     {
@@ -96,7 +124,6 @@ int upld(int s)
     }
   
     int sizeSent;
-    
     char action [BUFFER] = "UPLD\0";
     if ((sizeSent = send(s, action, strlen(action), 0)) < 0)
     {
@@ -109,15 +136,12 @@ int upld(int s)
 
     char sizeName [BUFFER];
     short int tmpShort = (short int)strlen(uploadFile);
-    printf("uploadFile: %d\n", strlen(uploadFile));
-    printf("tmpShort: %hu\n", tmpShort);
     uint16_t sizeOfName = htons(tmpShort);
     
     sprintf(sizeName, "%" PRIu16, sizeOfName);
     strcat(sizeName, ",");
     strcat(sizeName, uploadFile);
     strcat(sizeName, "\0");
-    printf("sizeName: %s\n", sizeName);
     
     if ((sizeSent = send(s, sizeName, strlen(sizeName), 0)) < 0)
     {
@@ -138,8 +162,6 @@ int upld(int s)
         printf("From Server: %s\n", rBuffer);
         exit(1);
     }
-    printf("size of received: %d\n", rSize);
-    printf("From Server: %s\n", rBuffer);
     if (strcmp(rBuffer, "ACK") == 0)
     { 
         char sizeFile [BUFFER];
@@ -175,10 +197,52 @@ int upld(int s)
         exit(1);
     }
 
+    if (strcmp(rBuffer1, "ACK") != 0)
+    {
+        fprintf(stderr, "Server side failure uploading file\n");
+        free(buf);
+        fclose(fp);
+        close(s);
+        exit(1);
+    }
+
     printf("We did it!\n%s\n", rBuffer1);
 
     free(buf);
     fclose(fp);
+    return 0;
+}
+
+int list(int s)
+{
+    int sizeSent;
+    char action [BUFFER] = "LIST\0";
+    if ((sizeSent = send(s, action, strlen(action), 0)) < 0)
+    {
+        perror("Error sending action LIST\n");
+        close(s);
+        exit(1);
+    }
+
+    int rSize;
+    char rBuffer[BUFFER];
+    if ((rSize = recv(s, rBuffer, BUFFER, 0)) <= 0) 
+    {
+        perror("Error receiving size of incoming directory listing\n");
+        close(s);
+        exit(1);
+    }
+
+    uint32_t sizeOfList = ntohl(atoi(rBuffer));
+    char lBuffer[(int)sizeOfList]; 
+    if ((rSize = recv(s, lBuffer, strlen(lBuffer), 0)) <= 0) 
+    {
+        perror("Error receiving size of incoming directory listing\n");
+        close(s);
+        exit(1);
+    }
+
+    printf("%s\n", lBuffer);
     return 0;
 }
 
