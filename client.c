@@ -18,26 +18,32 @@ int dwld(int s)
     printf("Enter the file to download\n");
     scanf("%s", inputFile);
     
-    char fSize [BUFFER];
-    sprintf(fSize, "%d", strlen(inputFile));
-    char action [BUFFER];
+    char action [BUFFER] = "DWLD\0";
 
-    strcat(action, "DWLD ");
-    strcat(action, fSize);
-    strcat(action, " ");
-    strcat(action, inputFile);
+    char sizeName [BUFFER];
+    short int tmpShort = (short int)strlen(inputFile);
+    uint16_t sizeOfName = htons(tmpShort); 
+    sprintf(sizeName, "%" PRIu16, sizeOfName);
 
-    printf("sending string: %s\n", action);
+    strcat(sizeName, " ");
+    strcat(sizeName, inputFile);
 
     int sizeSent;
     if ((sizeSent = send(s, action, strlen(action), 0)) < 0)
     {
-        perror("Error sending message\n");
+        perror("Error sending action DWLD\n");
+        close(s);
+        exit(1);
+    }
+    if ((sizeSent = send(s, sizeName, strlen(sizeName), 0)) < 0)
+    {
+        perror("Error sending sizeName\n");
         close(s);
         exit(1);
     }
     int rSize;
     char rBuffer[BUFFER];
+    
     if ((rSize = recv(s, rBuffer, BUFFER, 0)) < 0) 
     {
         perror("Error receiving message after DWLD sent\n");
@@ -45,9 +51,7 @@ int dwld(int s)
         exit(1);
     }
 
-
     return 0;
-
 }
 
 
@@ -76,7 +80,7 @@ int upld(int s)
         exit(1);
     }
     fseek(fp, 0, SEEK_END);
-    long fSize = ftell(fp);
+    int fSize = ftell(fp);
     fseek(fp, 0, SEEK_SET); 
     
     char *buf = malloc(fSize + 1);
@@ -126,17 +130,22 @@ int upld(int s)
 
     int rSize;
     char rBuffer[BUFFER];
-    if ((rSize = recv(s, rBuffer, BUFFER, 0)) < 0) 
+    if ((rSize = recv(s, rBuffer, BUFFER, 0)) <= 0) 
     {
         perror("Error receiving ACK about UPLD fileSize\n");
         close(s);
         exit(1);
     }
-
-    if (strcmp(rBuffer, "letsgo") == 0)
+    printf("size of received: %d\n", rSize);
+    printf("From Server: %s\n", rBuffer);
+    if (strcmp(rBuffer, "ACK") == 0)
     { 
         char sizeFile [BUFFER];
-        sprintf(sizeFile, "%d", fSize + 1);
+        
+        int tmpInt = (int)(strlen(buf));
+        uint32_t sizeOfFile = htonl(tmpInt);
+        sprintf(sizeFile, "%" PRIu32, sizeOfFile);
+        printf("%" PRIu32 " yeet\n", sizeOfFile);
         if ((sizeSent = send(s, sizeFile, strlen(sizeFile), 0)) < 0)
         {
             perror("Error sending sizeFile\n");
@@ -145,7 +154,7 @@ int upld(int s)
             fclose(fp);
             exit(1);
         }
-        if ((sizeSent = send(s, buf, fSize + 1, 0)) < 0)
+        if ((sizeSent = send(s, buf, strlen(buf), 0)) < 0)
         {
             perror("Error sending UPLD file\n");
             close(s);
@@ -156,7 +165,7 @@ int upld(int s)
     }
 
     char rBuffer1[BUFFER];
-    if ((rSize = recv(s, rBuffer1, BUFFER, 0)) < 0) 
+    if ((rSize = recv(s, rBuffer1, BUFFER, 0)) <= 0) 
     {
         perror("Error receiving ACK about UPLD file\n");
         close(s);
@@ -167,7 +176,7 @@ int upld(int s)
 
     free(buf);
     fclose(fp);
-    return 1;
+    return 0;
 }
 
 int main(int argc, char * argv[])
