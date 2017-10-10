@@ -92,6 +92,8 @@ int upload(int client)
         exit(1);
     }
 
+    sendData(client, "ACK", strlen("ACK"));
+
     return fclose(fp);
 }
 
