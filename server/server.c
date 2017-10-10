@@ -17,16 +17,16 @@
 int sendData(int client, char* data)
 { return send(client, data, strlen(data), 0); }
 
-int recieveData(int client, char * buf)
-{ return recv(client, buf, sizeof(buf), 0); }
+int recieveData(int client, char* buf, int len)
+{ return recv(client, buf, len, 0); }
 
 int download(int client)
 {
 
-    char* meow[256];
+    char meow[256];
     bzero(meow, sizeof(meow));
     printf("recieve 1\n");
-    recieveData(client, meow);
+    recieveData(client, meow, sizeof(meow));
 
     int i = 0;
     char* args[2], token = strtok(meow, ",");
@@ -38,10 +38,10 @@ int download(int client)
 
 int upload(int client)
 {
-    char* meow[256];
+    char meow[256];
     bzero(meow, sizeof(meow));
     printf("recieve 1\n");
-    recieveData(client, meow);
+    recieveData(client, meow, sizeof(meow));
 
     int i = 0;
 
@@ -52,7 +52,7 @@ int upload(int client)
 
     short fNameSize = ntohs(atoi(args[0]));
 
-    printf("recieve 1\n");
+    printf("recieve 2\n");
 
     sendData(client, "ACK");
 
@@ -135,7 +135,7 @@ int main(int argc, char *argv[])
 
         bzero(buf, strlen(buf));
 
-        if (recieveData(s2, buf) < 0) {
+        if (recieveData(s2, buf, sizeof(buf)) < 0) {
             printf("ERROR: recieving\n");
             exit(1);
         }
