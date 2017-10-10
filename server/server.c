@@ -41,20 +41,22 @@ int upload(int client)
     char meow[256];
     bzero(meow, strlen(meow));
     printf("recieve 1\n");
-    recieveData(client, meow, strlen(meow));
-
+    recieveData(client, meow, 256);
+    printf("yo\n");
     int i = 0;
 
-
-    char* args[2], token = strtok(meow, ",");
+    printf("%s\n", meow);
+    
+    char *test = strdup(meow);
+    char* args[4], token = strtok(test, ",");
     while (token != NULL)
         { args[i] = strdup(token); i++; token=strtok(NULL, ","); }
 
-    short fNameSize = ntohs(atoi(args[0]));
+    //short fNameSize = ntohs(atoi(args[0]));
 
     printf("recieve 2\n");
-
-    sendData(client, "ACK", strlen("ACK"));
+   // char *test = "ACK\0";
+    //sendData(client, test, strlen(test));
 
     /* recieveData(client, input[1]); */
 

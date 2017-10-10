@@ -156,7 +156,7 @@ int upld(int s)
     char rBuffer[BUFFER];
     if ((rSize = recv(s, rBuffer, BUFFER, 0)) <= 0) 
     {
-        perror("Error receiving ACK about UPLD fileSize\n");
+        perror("Error receiving First ack\n");
         close(s);
         printf("size of received: %d\n", rSize);
         printf("From Server: %s\n", rBuffer);
