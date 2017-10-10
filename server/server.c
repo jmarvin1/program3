@@ -36,6 +36,7 @@ int download(int client)
     short fNameSize = ntohs(atoi(args[0]));
 
     if (access(args[1], F_OK) == -1 ) {
+        printf("ERROR: file doesn't exist\n");
         sendData(client, "-1", strlen("-1"));
         return 1;
     }
@@ -86,6 +87,7 @@ int upload(int client)
     bzero(fileData, strlen(fileData));
     recieveData(client, fileData, fSize);
 
+    printf("File name: %s", args[1]);
     FILE *fp = fopen(args[1], "w");
     if (fwrite(fileData, 1, fSize, fp) != fSize) {
         printf("ERROR: UPLD: write error\n");
