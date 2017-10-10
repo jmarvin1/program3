@@ -22,28 +22,40 @@ int recieveData(int client, char * buf)
 
 int download(int client)
 {
-    /* int i = 0; */
-    /* char* args[4], token = strtok(command[1], ","); */
-    /* while (token != NULL) */
-    /*     { args[i] = strdup(token); i++; token=strtok(NULL, ","); } */
+
+    char* meow[256];
+    bzero(meow, sizeof(meow));
+    printf("recieve 1\n");
+    recieveData(client, meow);
+
+    int i = 0;
+    char* args[2], token = strtok(meow, ",");
+    while (token != NULL)
+        { args[i] = strdup(token); i++; token=strtok(NULL, ","); }
 
     return 1;
 }
 
 int upload(int client)
 {
+    char* meow[256];
+    bzero(meow, sizeof(meow));
+    printf("recieve 1\n");
+    recieveData(client, meow);
+
     int i = 0;
-    char* input[4];
 
-    recieveData(client, input[0]);
 
-    char* args[4], token = strtok(input[1], ",");
+    char* args[2], token = strtok(meow, ",");
     while (token != NULL)
         { args[i] = strdup(token); i++; token=strtok(NULL, ","); }
 
     short fNameSize = ntohs(atoi(args[0]));
 
+    printf("recieve 1\n");
+
     sendData(client, "ACK");
+
     recieveData(client, input[1]);
 
     long fSize = ntohl(atoi(input[1]));
