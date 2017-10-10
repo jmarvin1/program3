@@ -7,6 +7,7 @@
 #include <netinet/in.h>
 #include <netdb.h>
 #include <unistd.h>
+#include <assert.h>
 //Ports we can use 41028, 41029, 41030
 #define MAX_PENDING 10
 #define BUFFER 8128
@@ -82,7 +83,32 @@ int main(int argc, char *argv[])
 		{
 			break;
 		}
+		int filesize;
+
+		char* fname;
+		
+	
+		int i;
 		printf("%s\n",buf);
+		char *str = strdup(buf);
+		char *token;
+		char *command;
+		int wc=0;
+		while ((token = strsep(&str, ",")) != NULL)
+		{
+			wc++;
+			if(wc==1)
+				command=token;
+			else if(wc==2)
+				filesize=atoi(token);
+			else if(wc==3)
+				fname=token;	
+					
+		}
+
+		printf("%s\n",command);
+		printf("%d\n",filesize);
+		printf("%s\n",fname);	
 		close(s2);
 	}
 		
