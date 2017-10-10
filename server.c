@@ -119,6 +119,8 @@ int main(int argc, char *argv[])
         char* command[5];
 
         for (i = 0; i < 5; i++) {
+            bzero(buf, strlen(buf));
+
             if((len=recv(s2, buf, sizeof(buf), 0))==-1) {
                 perror("ERROR: receiving message");
                 exit(1);
@@ -143,9 +145,8 @@ int main(int argc, char *argv[])
 
         char* args[4];
         i = 0;
-        char* token;
-        token = strtok(command[1], ",");
-        while (token != NULL) {printf("%s\n", token); token = strtok(NULL, ",");}
+        char* token = strtok(command[1], ",");
+        while (token != NULL) {printf("%s\n", token); token=strtok(NULL, ",");}
 
         /* printf("%s\n", args[0]); */
         /* printf("%s\n", args[1]); */
