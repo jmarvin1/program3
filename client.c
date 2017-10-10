@@ -7,15 +7,16 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h>
+#include <inttypes.h>
+
 #define BUFFER 8128
 
 int dwld(int s)
 {
-    size_t sizeInput;
     char  inputFile [BUFFER];
     
     printf("Enter the file to download\n");
-    scanf("%s\0", inputFile);
+    scanf("%s", inputFile);
     
     char fSize [BUFFER];
     sprintf(fSize, "%d", strlen(inputFile));
@@ -52,12 +53,11 @@ int dwld(int s)
 
 int upld(int s)
 {
-    size_t sizeInput;
     char uploadFile [BUFFER];
     
     printf("Enter the file to upload\n");
     
-    scanf("%s\0", uploadFile); 
+    scanf("%s", uploadFile); 
     
     printf("yeet: %s\n", uploadFile);
     if( access( uploadFile, F_OK ) != 0 ) 
@@ -104,7 +104,10 @@ int upld(int s)
     }
 
     char sizeName [BUFFER];
-    sprintf(sizeName, "%d\0", strlen(uploadFile));
+    short int tmpShort = (short int)strlen(uploadFile);
+    uint16_t sizeOfName = htons(tmpShort);
+    
+    sprintf(sizeName, "%" PRIu16, sizeOfName);
     strcat(sizeName, ",");
     strcat(sizeName, uploadFile);
     strcat(sizeName, "\0");
@@ -129,7 +132,7 @@ int upld(int s)
     if (strcmp(rBuffer, "letsgo") == 0)
     { 
         char sizeFile [BUFFER];
-        sprintf(sizeFile, "%d\0", fSize + 1);
+        sprintf(sizeFile, "%d", fSize + 1);
         if ((sizeSent = send(s, sizeFile, strlen(sizeFile), 0)) < 0)
         {
             perror("Error sending sizeFile\n");
@@ -165,13 +168,10 @@ int upld(int s)
 
 int main(int argc, char * argv[])
 {
-	FILE *fp;
 	struct hostent *hp;
 	struct sockaddr_in sin;
 	char *host;
-	char buf[BUFFER];
 	int s;
-	int len;
 	int port;
 	//Handle arguments 
 	if(argc==3)
@@ -213,7 +213,7 @@ int main(int argc, char * argv[])
 		close(s);
 		exit(1);
 	}
-    int yo = 0;
+    
     while (1) 
     {
         printf("Enter a command to perform:\n\t");
@@ -221,9 +221,8 @@ int main(int argc, char * argv[])
         printf("Make Directory\n\tRDIR: Remove Directory\n\tCDIR: ");
         printf("Change Directory\n\tDELF: Delete File\n\tQUIT: Exit\n");
         
-        size_t sizeInput;
         char inputAction [BUFFER];
-        scanf("%s\0", inputAction);
+        scanf("%s", inputAction);
         if (strcmp(inputAction, "DWLD") == 0)
         {
             printf("DWLD\n");
