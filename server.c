@@ -25,30 +25,34 @@ enum action {
     QUIT
 };
 
-int download(char* fname, int fsize)
+int download(char* command[])
 {
-
-    //check to see if file exists
-    if(access(fname, F_OK) !=-1)
-    {
-        //file exists
-        struct stat st;
-        stat(fname, &st);
-        fsize = st.st_size;
-    }
-    else
-    {
-        fsize = -1;
-    }
-
-    char* message;
-    sprintf(message,"%d\n",fsize);
+    char* args[4];
+    int i = 0;
+    char* token = strtok(command[1], ",");
+    while (token != NULL)
+        {args[i] = strdup(token); i++; token=strtok(NULL, ",");}
 
     return 1;
 }
 
-int upload(char*  fname, int fsize)
+int upload(char*  command[])
 {
+    char* args[4];
+    int i = 0;
+    char* token = strtok(command[1], ",");
+    while (token != NULL)
+        {args[i] = strdup(token); i++; token=strtok(NULL, ",");}
+
+    short fNameSize = ntohs(atoi(args[0]));
+    long fSize = ntohl(atoi(command[2]));
+
+    FILE *fp = fopen(args[1], "w");
+    if (fwrite(command[3], 1, fSize, fp) != fSize) {
+        printf("ERROR: UPLD: write error\n");
+    }
+    fclose(fp);
+
     return 1;
 }
 
@@ -116,9 +120,10 @@ int main(int argc, char *argv[])
 		}
 
         int i;
-        char* command[5];
+        char* command[10];
+        int fSize = 0;
 
-        for (i = 0; i < 5; i++) {
+        for (i = 0; i > -1; i++) {
             bzero(buf, strlen(buf));
 
             if((len=recv(s2, buf, sizeof(buf), 0))==-1) {
@@ -130,7 +135,6 @@ int main(int argc, char *argv[])
             }
 
             command[i] = strdup(buf);
-            printf("%s\n", command[i]);
 
             if (i == 1 || i == 3) {
                 if ((send(s2, "ACK", strlen("ACK"), 0)) < 0) {
@@ -139,29 +143,11 @@ int main(int argc, char *argv[])
                 }
             }
 
-            if (!strcmp(command[0], "DWLD") && i == 3) { break; }
-            else if (!strcmp(command[0], "UPLD") && i == 3) { break; }
+            if (!strcmp(command[0], "DWLD") && i == 3)
+                { download(command); break; }
+            else if (!strcmp(command[0], "UPLD") && i == 3)
+                { upload(command); break; }
         }
-
-        char* args[4];
-        i = 0;
-        char* token = strtok(command[1], ",");
-        while (token != NULL) {args[i] = strdup(token); i++; token=strtok(NULL, ",");}
-
-        printf("%s\n", args[0]);
-        printf("%s\n", args[1]);
-
-		/* if(strcmp(command,"DWLD")==0) { */
-            /* if (!download(command[1], fsize)) { */
-                /* printf("ERROR: download error\n"); */
-            /* } */
-        /* } */
-        /* else if(strcmp(command,"UPLD")==0) { */
-            /* if (!upload(fname, fsize)) { */
-                /* printf("ERROR: download error\n"); */
-            /* } */
-		/* } */
-
 		close(s2);
 	}
 }
