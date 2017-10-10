@@ -115,34 +115,48 @@ int main(int argc, char *argv[])
 			exit(1);
 		}
 
-		if((len=recv(s2, buf, sizeof(buf), 0))==-1)
-		{
-			perror("error receiving message");
-			exit(1);
-		}
+		/* if((len=recv(s2, buf, sizeof(buf), 0))==-1) */
+		/* { */
+		/* 	perror("error receiving message"); */
+		/* 	exit(1); */
+		/* } */
 
-		if(len==0)
-		{
-			break;
-		}
+		/* if(len==0) */
+		/* { */
+		/* 	break; */
+		/* } */
 
-		char* fname;
+		/* char* fname; */
 
-		printf("%s\n",buf);
+		/* printf("%s\n",buf); */
 
-		char *command;
-		int32_t fsize;
+        int i;
+        char* command[5];
 
-		if(strcmp(command,"DWLD")==0) {
-            if (!download(fname, fsize)) {
-                printf("ERROR: download error\n");
+        for (i = 0; i < 5; i++) {
+            if((len=recv(s2, buf, sizeof(buf), 0))==-1) {
+                perror("error receiving message");
+                exit(1);
             }
+            if(len==0) {
+                break;
+            }
+            command[i] = buf;
+            printf("%s\n", command[i]);
         }
-        else if(strcmp(command,"UPLD")==0) {
-            if (!upload(fname, fsize)) {
-                printf("ERROR: download error\n");
-            }
-		}
+
+		/* int32_t fsize; */
+
+		/* if(strcmp(command,"DWLD")==0) { */
+            /* if (!download(fname, fsize)) { */
+                /* printf("ERROR: download error\n"); */
+            /* } */
+        /* } */
+        /* else if(strcmp(command,"UPLD")==0) { */
+            /* if (!upload(fname, fsize)) { */
+                /* printf("ERROR: download error\n"); */
+            /* } */
+		/* } */
 
 		close(s2);
 	}
