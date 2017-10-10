@@ -127,10 +127,8 @@ int main(int argc, char *argv[])
             exit(1);
         }
 
-        if (!strcmp(buf, "DWLD"))
-            { download(s2); break; }
-        else if (!strcmp(buf, "UPLD"))
-            { upload(s2); break; }
+        if (!strcmp(buf, "DWLD")) { download(s2); }
+        else if (!strcmp(buf, "UPLD")) { upload(s2); }
 
 		close(s2);
 	}
