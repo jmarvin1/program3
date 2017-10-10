@@ -1,8 +1,4 @@
-all: myftpd myftp
-
-myftpd: 
+all: 
 	gcc server.c -o myftpd
-
-myftp: 
 	gcc client.c -o myftp
 
