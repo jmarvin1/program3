@@ -17,8 +17,8 @@ int main(int argc, char *argv[])
 	int len;
 	int s, s2;
 	int port;
-	char *opt;
-	//handle arguments
+	
+    //handle arguments
 	if(argc==2)
 	{
 		port = atoi(argv[1]);
