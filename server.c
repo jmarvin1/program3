@@ -145,7 +145,8 @@ int main(int argc, char *argv[])
 
         char* args[4];
         i = 0;
-        while ((args[i]=strdup(strsep(command[1], ",")))) i++;
+        char* token = strtok(command[1], ",");
+        while (token != NULL) {args[i] = strdup(token); i++; token=strtok(NULL, ",");}
 
         printf("%s\n", args[0]);
         printf("%s\n", args[1]);
