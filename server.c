@@ -115,21 +115,6 @@ int main(int argc, char *argv[])
 			exit(1);
 		}
 
-		/* if((len=recv(s2, buf, sizeof(buf), 0))==-1) */
-		/* { */
-		/* 	perror("error receiving message"); */
-		/* 	exit(1); */
-		/* } */
-
-		/* if(len==0) */
-		/* { */
-		/* 	break; */
-		/* } */
-
-		/* char* fname; */
-
-		/* printf("%s\n",buf); */
-
         int i;
         char* command[5];
 
@@ -143,6 +128,11 @@ int main(int argc, char *argv[])
             }
             command[i] = buf;
             printf("%s\n", command[i]);
+            if (i == 1) {
+                if ((send(s2, "ACK", strlen("ACK"), 0)) < 0) {
+                    printf("ERROR: send\n");
+                }
+            }
         }
 
 		/* int32_t fsize; */
