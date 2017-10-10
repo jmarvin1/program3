@@ -8,6 +8,8 @@
 #include <netdb.h>
 #include <unistd.h>
 #include <assert.h>
+#include <sys/stat.h>
+#include <stdint.h>
 //Ports we can use 41028, 41029, 41030
 #define MAX_PENDING 10
 #define BUFFER 8128
@@ -94,6 +96,7 @@ int main(int argc, char *argv[])
 		char *token;
 		char *command;
 		int wc=0;
+		int32_t fsize;
 		while ((token = strsep(&str, ",")) != NULL)
 		{
 			wc++;
@@ -108,7 +111,28 @@ int main(int argc, char *argv[])
 
 		printf("%s\n",command);
 		printf("%d\n",filesize);
-		printf("%s\n",fname);	
+		printf("%s\n",fname);
+
+		if(strcmp(command,"DWLD")==0)
+		{
+			//check to see if file exists
+			if(access(fname, F_OK) !=-1)
+			{
+				//file exists
+				struct stat st;
+				stat(fname, &st);
+				fsize = st.st_size;
+			}
+			else
+			{
+				fsize = -1;
+			}
+			char* message;
+			sprintf(message,"%d\n",fsize);
+			//send file size to the client 
+			 	
+		}						
+					
 		close(s2);
 	}
 		
