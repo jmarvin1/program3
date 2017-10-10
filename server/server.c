@@ -14,8 +14,8 @@
 #define MAX_PENDING 10
 #define BUFFER 8128
 
-int sendData(int client, char* data)
-{ return send(client, data, strlen(data), 0); }
+int sendData(int client, char* data, int len)
+{ return send(client, data, len, 0); }
 
 int recieveData(int client, char* buf, int len)
 { return recv(client, buf, len, 0); }
@@ -39,9 +39,9 @@ int download(int client)
 int upload(int client)
 {
     char meow[256];
-    bzero(meow, sizeof(meow));
+    bzero(meow, strlen(meow));
     printf("recieve 1\n");
-    recieveData(client, meow, sizeof(meow));
+    recieveData(client, meow, strlen(meow));
 
     int i = 0;
 
@@ -54,7 +54,7 @@ int upload(int client)
 
     printf("recieve 2\n");
 
-    sendData(client, "ACK");
+    sendData(client, "ACK", strlen("ACK"));
 
     /* recieveData(client, input[1]); */
 
