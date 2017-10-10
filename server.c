@@ -42,7 +42,8 @@ int main(int argc, char *argv[])
 	}
 	
 	//make socket reusable 
-	if((setsockopt(s, SOL_SOCKET, SO_REUSEADDR, (char*)&opt,sizeof(int)))<0)
+	int opt = 1;
+    if((setsockopt(s, SOL_SOCKET, SO_REUSEADDR, (char*)&opt,sizeof(int)))<0)
 	{
 		perror("error setting sock to reusable");
 		exit(1);
