@@ -131,7 +131,7 @@ int main(int argc, char *argv[])
             printf("%s\n", command[i]);
 
             if (i == 1) {
-                if ((send(s, "ACK", strlen("ACK"), 0)) < 0) {
+                if ((send(s2, "ACK", strlen("ACK"), 0)) < 0) {
                     printf("ERROR: send\n");
                     exit(1);
                 }
@@ -144,10 +144,11 @@ int main(int argc, char *argv[])
         char* args[4];
         i = 0;
         char* token;
-        while ((token = strsep(command[1], ","))) args[i]=token && i++;
+        token = strtok(command[1], ",");
+        while (token != NULL) {printf("%s\n", token); token = strtok(NULL, ",");}
 
-        printf("%s\n", args[0]);
-        printf("%s\n", args[1]);
+        /* printf("%s\n", args[0]); */
+        /* printf("%s\n", args[1]); */
 
 		/* if(strcmp(command,"DWLD")==0) { */
             /* if (!download(command[1], fsize)) { */
