@@ -134,6 +134,8 @@ int upld(int s)
     {
         perror("Error receiving ACK about UPLD fileSize\n");
         close(s);
+        printf("size of received: %d\n", rSize);
+        printf("From Server: %s\n", rBuffer);
         exit(1);
     }
     printf("size of received: %d\n", rSize);
@@ -146,6 +148,7 @@ int upld(int s)
         uint32_t sizeOfFile = htonl(tmpInt);
         sprintf(sizeFile, "%" PRIu32, sizeOfFile);
         printf("%" PRIu32 " yeet\n", sizeOfFile);
+        
         if ((sizeSent = send(s, sizeFile, strlen(sizeFile), 0)) < 0)
         {
             perror("Error sending sizeFile\n");
