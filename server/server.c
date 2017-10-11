@@ -24,8 +24,10 @@ int recieveData(int client, char* buf, int len)
 int download(int client)
 {
     char fileNameSize[256];
-    bzero(fileNameSize, strlen(fileNameSize));
-    recieveData(client, fileNameSize, strlen(fileNameSize));
+    bzero(fileNameSize, sizeof(fileNameSize));
+    recieveData(client, fileNameSize, sizeof(fileNameSize));
+
+    printf("%s\n", fileNameSize);
 
     int i = 0;
     char* args[2];
@@ -33,6 +35,7 @@ int download(int client)
     while (token != NULL)
         { args[i] = strdup(token); i++; token=strtok(NULL, ","); }
 
+    printf("%s\n", args[1]);
     short fNameSize = ntohs(atoi(args[0]));
 
     if (access(args[1], F_OK) == -1 ) {
@@ -41,20 +44,20 @@ int download(int client)
         return 1;
     }
 
-    FILE *fp = fopen(args[1], "w");
+    FILE *fp = fopen(args[1], "r");
 
     fseek(fp, 0, SEEK_END);
     uint32_t fSize = ftell(fp);
     fseek(fp, 0, SEEK_SET);
 
-    fSize = htonl(fSize);
     char sizeFile[BUFFER];
 
-    sprintf(sizeFile, "%" PRIu32, fSize);
+    sprintf(sizeFile, "%" PRIu32, htonl(fSize));
     sendData(client, sizeFile, strlen(sizeFile));
 
     char fileData[fSize];
     fread(fileData, fSize, 1, fp);
+    printf("File: %s\n", fileData);
 
     sendData(client, fileData, strlen(fileData));
 
@@ -64,8 +67,8 @@ int download(int client)
 int upload(int client)
 {
     char fileNameSize[256];
-    bzero(fileNameSize, strlen(fileNameSize));
-    recieveData(client, fileNameSize, strlen(fileNameSize));
+    bzero(fileNameSize, sizeof(fileNameSize));
+    recieveData(client, fileNameSize, sizeof(fileNameSize));
     printf("file name and size: %s\n", fileNameSize);
 
     int i = 0;
@@ -79,8 +82,8 @@ int upload(int client)
     sendData(client, "ACK", strlen("ACK"));
 
     char fileSize[256];
-    bzero(fileSize, strlen(fileSize));
-    recieveData(client, fileSize, strlen(fileSize));
+    bzero(fileSize, sizeof(fileSize));
+    recieveData(client, fileSize, sizeof(fileSize));
 
     long fSize = ntohl(atoi(fileSize));
 
@@ -170,9 +173,10 @@ int main(int argc, char *argv[])
             exit(1);
         }
 
+	printf("%s\n", buf);
+
         if (!strcmp(buf, "DWLD")) { download(s2); }
         else if (!strcmp(buf, "UPLD")) { upload(s2); }
-
 		close(s2);
 	}
 }
