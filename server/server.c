@@ -21,6 +21,34 @@ int sendData(int client, char* data, int len)
 int recieveData(int client, char* buf, int len)
 { if (recv(client, buf, len, 0) < 0) {printf("ERROR: recieve\n");} }
 
+void octalToString(int octalNum, char* resultString)
+{
+    char octalNum[4];
+    sprintf(octalNum, "%d", octalNum&0777);
+    octalNum = atoi(octalNum);
+
+    char* perms[3];
+
+    int i;
+    for (i=0; i < 3; i++) {
+	switch(octalNum % 10) {
+	    case 0: perms[i] = "---"; break;
+	    case 1: perms[i] = "--x"; break;
+	    case 2: perms[i] = "-w-"; break;
+	    case 3: perms[i] = "-wx"; break;
+	    case 4: perms[i] = "r--"; break;
+	    case 5: perms[i] = "r-x"; break;
+	    case 6: perms[i] = "rw-"; break;
+	    case 7: perms[i] = "rwx"; break;
+	}
+	octalNum /= 10;
+    } 
+    
+    strcpy(resultString, perms[2]);
+    strcat(resultString, perms[1]);
+    strcat(resultString, perms[0]);
+}
+
 int download(int client)
 {
     char fileNameSize[256];
@@ -103,6 +131,17 @@ int upload(int client)
     return fclose(fp);
 }
 
+int list(int client)
+{
+    struct stat fileStat;
+    if (stat("meow.txt", &filestat) < 0) { return 1; }
+    char permString[9];
+
+    bzero(fileStat.st_mode, permString);
+
+    return 1;
+}
+
 int main(int argc, char *argv[])
 {
 	//create data structure
@@ -173,10 +212,10 @@ int main(int argc, char *argv[])
             exit(1);
         }
 
-	printf("%s\n", buf);
-
         if (!strcmp(buf, "DWLD")) { download(s2); }
         else if (!strcmp(buf, "UPLD")) { upload(s2); }
-		close(s2);
+        else if (!strcmp(buf, "LIST")) { list(s2); }
+	
+	close(s2);
 	}
 }
