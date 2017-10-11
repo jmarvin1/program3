@@ -40,7 +40,7 @@ int dwld(int s)
     uint16_t sizeOfName = htons(tmpShort);
 
     sprintf(sizeName, "%" PRIu16, sizeOfName);
-    strcat(sizeName, " ");
+    strcat(sizeName, ",");
     strcat(sizeName, inputFile);
     if ((sizeSent = send(s, sizeName, strlen(sizeName), 0)) < 0)
     {
