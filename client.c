@@ -246,6 +246,102 @@ int list(int s)
     return 0;
 }
 
+int delf(int s)
+{
+	int sizeSent;
+	char action [BUFFER] = "DELF\0";
+    	if ((sizeSent = send(s, action, strlen(action), 0)) < 0)
+    	{
+        	perror("Error sending action DELF\n");
+        	close(s);
+        	exit(1);
+    	}
+	char deleteFile[BUFFER];
+	printf("Enter the file to be deleted:\n")
+	scanf("%s",deleteFile);
+	
+	
+	short int filenameLength = (short int)strlen(deleteFile);
+	uint16_t sizeOfName = htons(filenameLength);
+    	char sizeName[BUFFER];
+    	sprintf(sizeName, "%" PRIu16, sizeOfName);
+    	strcat(sizeName, ",");
+    	strcat(sizeName, deleteFile);
+    	strcat(sizeName, "\0");
+    
+    	if ((sizeSent = send(s, sizeName, strlen(sizeName), 0)) < 0)
+    	{
+        	perror("Error sending sizeName\n");
+        	close(s);
+        	exit(1);
+    	}
+
+	int rSize;
+    	char rBuffer[BUFFER];
+    	if ((rSize = recv(s, rBuffer, BUFFER, 0)) <= 0) 
+    	{
+        	perror("Error receiving size of incoming directory listing\n");
+        	close(s);
+        	exit(1);
+    	}
+	
+	if(strcmp(rBuffer, "1")==0)
+	{
+		//file exists 
+		char request[BUFFER];
+		printf("The file exists. Are you sure you want to delete the file?(yes,no)\n");
+		scanf("%s",request);
+		//sending confirmation
+		if(strcmp(request,"no")==0)
+		{
+			printf("Delete abandoned by user\n"
+			close(s);
+			return 0;
+		}
+		else if(strcmp(request,"yes")==0)
+		{
+			if((sizeSent= send(s, "yes\0", strlen("yes\0"),0))<=0)
+			{
+				perror("Error sending the delete confirmation");
+				close(s);
+			}
+			
+		}
+	}
+	else
+	{
+		//file does not exist
+		printf("File does not exist");
+		close(s);
+		return 0;
+	}
+
+	int ackSize;
+	char ackBuffer[BUFFER];
+	if(( ackSize = recv(s, ackBuffer, BUFFER, 0))<0)
+	{
+		perror("error receiving final deletion acknowledgement");
+		close(s);
+		exit(1);
+	}
+
+	if(strcmp(ackBuffer,"1")==0)
+	{
+		//file was deleted 
+		printf("File was successfully deleted!\n");
+		return 0;
+	}
+	else
+	{
+		printf("File could not be deleted\n");
+		return 0;
+	}
+
+
+}		
+  
+ 	
+
 int main(int argc, char * argv[])
 {
 	struct hostent *hp;
