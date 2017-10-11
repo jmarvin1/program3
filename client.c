@@ -257,7 +257,7 @@ int delf(int s)
         	exit(1);
     	}
 	char deleteFile[BUFFER];
-	printf("Enter the file to be deleted:\n")
+	printf("Enter the file to be deleted:\n");
 	scanf("%s",deleteFile);
 	
 	
@@ -280,7 +280,7 @@ int delf(int s)
     	char rBuffer[BUFFER];
     	if ((rSize = recv(s, rBuffer, BUFFER, 0)) <= 0) 
     	{
-        	perror("Error receiving size of incoming directory listing\n");
+        	perror("Error receiving whether or not file exists\n");
         	close(s);
         	exit(1);
     	}
@@ -294,7 +294,7 @@ int delf(int s)
 		//sending confirmation
 		if(strcmp(request,"no")==0)
 		{
-			printf("Delete abandoned by user\n"
+			printf("Delete abandoned by user\n");
 			close(s);
 			return 0;
 		}
@@ -428,6 +428,7 @@ int main(int argc, char * argv[])
         else if (strcmp(inputAction, "DELF") == 0)
         {
             printf("DELF\n");
+	    delf(s);
         } 
         else if (strcmp(inputAction, "QUIT") == 0)
         {
