@@ -11,9 +11,10 @@
 #include <sys/stat.h>
 #include <stdint.h>
 #include <inttypes.h>
+#include <dirent.h>
 //Ports we can use 41028, 41029, 41030
 #define MAX_PENDING 10
-#define BUFFER 8128
+#define BUF_SIZE 8128
 
 int sendData(int client, char* data, int len)
 { return send(client, data, len, 0); }
@@ -78,7 +79,7 @@ int download(int client)
     uint32_t fSize = ftell(fp);
     fseek(fp, 0, SEEK_SET);
 
-    char sizeFile[BUFFER];
+    char sizeFile[BUF_SIZE];
 
     sprintf(sizeFile, "%" PRIu32, htonl(fSize));
     sendData(client, sizeFile, strlen(sizeFile));
@@ -133,11 +134,149 @@ int upload(int client)
 
 int list(int client)
 {
-    struct stat fileStat;
-    if (stat("meow.txt", &filestat) < 0) { return 1; }
-    char permString[9];
+    DIR *dp;
+    struct dirent *ep;
+    char currDir[BUF_SIZE];
 
-    bzero(fileStat.st_mode, permString);
+    getcwd(currDir, sizeof(BUF_SIZE));
+    dp = opendir(currDir);
+
+    if (dp != NULL) {
+        struct stat fileStat;
+        char permString[9];
+        char* dirEnts[BUF_SIZE];
+        int ents = 0;
+        int entSize = 0;
+
+        while (ep = readdir(dp)) {
+            if (stat(ep->d_name, &filestat) < 0) { return 1; }
+            bzero(permString, sizeof(permString));
+            octalToString(fileStat.st_mode, permstring);
+
+            char fileInfoString[strlen(ep->d_name) + 11];
+            bzero(fileInfoString, sizeof(fileInfoString));
+           
+            strcpy(fileInfoString, permString);
+            strcat(fileInfoString, " ");
+            strcat(fileInfoString, ep->d_name);
+            
+            dirEnts[0] = strdup(fileInfoString);
+            ents++; entSize += strlen(fileInfoString);
+        }
+        closedir(dp);
+    }
+   
+    char* dirSizeBuffer[BUF_SIZE];
+    bzero(dirSizeBuffer, sizeof(dirSizeBuffer));
+    sprintf(dirSizeBuffer, "%d", entSize); 
+    sendData(client, dirSizeBuffer, strlen(dirSizeBuffer));
+
+    for (i = 0; i < ents; i++) {
+        sendData(client, dirEnts[i], strlen(dirEnts[i]));
+    }
+
+    return 1;
+}
+
+int createDir(int client)
+{
+    char fileNameSize[256];
+    bzero(fileNameSize, sizeof(fileNameSize));
+    recieveData(client, fileNameSize, sizeof(fileNameSize));
+
+    int i = 0;
+    char* args[2];
+    char* token = strtok(fileNameSize, ",");
+    while (token != NULL)
+        { args[i] = strdup(token); i++; token=strtok(NULL, ","); }
+
+    short fNameSize = ntohs(atoi(args[0]));
+
+    if (access(args[1], F_OK) == 0) {
+        printf("ERROR: file already exists\n");
+        sendData(client, "-2", strlen("-2"));
+        return 1;
+    }
+    
+    if (mkdir(args[1], 0666) == -1) {
+        printf("ERROR: error creating directory\n");
+        sendData(client, "-1", strlen("-1"));
+        return 1;
+    }
+
+    sendData(client, "1", strlen("1"));
+
+    return 1;
+}
+
+int deleteDir(int client)
+{   
+    char fileNameSize[256];
+    bzero(fileNameSize, sizeof(fileNameSize));
+    recieveData(client, fileNameSize, sizeof(fileNameSize));
+
+    int i = 0;
+    char* args[2];
+    char* token = strtok(fileNameSize, ",");
+    while (token != NULL)
+        { args[i] = strdup(token); i++; token=strtok(NULL, ","); }
+
+    short fNameSize = ntohs(atoi(args[0]));
+
+    DIR* dir = opendir(args[1]);
+    if (ENOENT == errno) {
+        printf("ERROR: directory does not exist\n");
+        sendData(client, "-1", strlen("-1"));
+        return 1;
+    } else {
+        sendData(client, "1", strlen("1"));
+    }
+    closedir(dir);
+   
+    char deleteConfirm[256];
+    bzero(deleteConfirm, sizeof(deleteConfirm));
+    recieveData(client, deleteConfirm, sizeof(deleteConfirm));
+
+    if (!strcmp(buf, "Yes")) {
+        if (rmdir(args[1]) == -1) {
+            printf("ERROR: error deleting directory\n");
+            printf("ERROR: is the directory empty?\n");
+            sendData(client, "-1", strlen("-1"));
+            return 1;
+        }
+        sendData(client, "1", strlen("1"));
+    }
+
+    return 1;
+}
+
+int changeDir(int client)
+{
+    char fileNameSize[256];
+    bzero(fileNameSize, sizeof(fileNameSize));
+    recieveData(client, fileNameSize, sizeof(fileNameSize));
+
+    int i = 0;
+    char* args[2];
+    char* token = strtok(fileNameSize, ",");
+    while (token != NULL)
+        { args[i] = strdup(token); i++; token=strtok(NULL, ","); }
+
+    short fNameSize = ntohs(atoi(args[0]));
+
+    DIR* dir = opendir(args[1]);
+    if (ENOENT == errno) {
+        printf("ERROR: directory does not exist\n");
+        sendData(client, "-2", strlen("-2"));
+        return 1;
+    }
+    closedir(dir);
+
+    if (chdir(args[1]) == -1) {
+        printf("ERROR: error changing directory\n");
+        sendData(client, "-1", strlen("-1"));
+        return 1;
+    }
 
     return 1;
 }
@@ -146,7 +285,7 @@ int main(int argc, char *argv[])
 {
 	//create data structure
 	struct sockaddr_in sin;
-	char buf[BUFFER];
+	char buf[BUF_SIZE];
 	int len;
 	int s, s2;
 	int port;
@@ -215,6 +354,9 @@ int main(int argc, char *argv[])
         if (!strcmp(buf, "DWLD")) { download(s2); }
         else if (!strcmp(buf, "UPLD")) { upload(s2); }
         else if (!strcmp(buf, "LIST")) { list(s2); }
+        else if (!strcmp(buf, "MDIR")) { createDir(s2); }
+        else if (!strcmp(buf, "RDIR")) { deleteDir(s2); }
+        else if (!strcmp(buf, "CDIR")) { changeDir(s2); }
 	
 	close(s2);
 	}
