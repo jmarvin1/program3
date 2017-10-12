@@ -68,12 +68,15 @@ int download(int client)
     printf("%s\n", args[1]);
     short fNameSize = ntohs(atoi(args[0]));
 
+    printf("checking if file exists\n");
     if (access(args[1], F_OK) == -1 ) {
         printf("ERROR: file doesn't exist\n");
+        char failed[BUF_SIZE];
         sendData(client, "-1", strlen("-1"));
         return 1;
     }
 
+    printf("opening file\n");
     FILE *fp = fopen(args[1], "r");
 
     fseek(fp, 0, SEEK_END);
@@ -81,15 +84,20 @@ int download(int client)
     fseek(fp, 0, SEEK_SET);
 
     char sizeFile[BUF_SIZE];
-
+    
     sprintf(sizeFile, "%" PRIu32, htonl(fSize));
+    printf("sending file size\n");
+    printf("file size: %s", sizeFile);
+    printf("size if file size: %d\n", strlen(sizeFile));    
     sendData(client, sizeFile, strlen(sizeFile));
 
     char fileData[fSize];
+    printf("reading from file\n");
     fread(fileData, fSize, 1, fp);
-    printf("File: %s\n", fileData);
+    //printf("File: %s\n", fileData);
 
-    sendData(client, fileData, strlen(fileData));
+    printf("sending\n");
+    sendData(client, fileData, fSize);
 
     return fclose(fp);
 }

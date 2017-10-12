@@ -9,6 +9,8 @@
 #include <netdb.h>
 #include <inttypes.h>
 #include <ctype.h>
+#include <sys/time.h> 
+
 #define BUFFER 8128
 
 /*unsigned int convert(char *st) {
@@ -48,38 +50,61 @@ int dwld(int s)
         close(s);
         exit(1);
     }
-
+    printf("receiving file size\n");
     int rSize;
     char rBuffer[BUFFER]; 
     if ((rSize = recv(s, rBuffer, BUFFER, 0)) < 0) 
     {
-        perror("Error receiving message after DWLD sent\n");
+        perror("Error receiving the size of file to be downloaded\n");
         close(s);
         exit(1);
     }
-
+    printf("here\n");
     long fSize = ntohl(atoi(rBuffer));
-    if (fSize < 0)
+    if (atoi(rBuffer) == -1)
     {
+        printf("File %s does not exist\n", inputFile);
+        return 1;
+    }
+    printf("here we go\n");
+    printf("fSize: %d\n", (int)fSize);
+    //char fBuffer[fSize];
+    char *fBuffer = malloc(fSize);
+    if (!fBuffer) {
+        close(s);
         exit(1);
     }
-    char fBuffer[(int)fSize];
+    printf("we just made fBuffer\n");
+    struct timeval st, et;
+    // start timer
+    gettimeofday(&st,NULL);
+    
+    printf("receiving file\n");
     if ((rSize = recv(s, fBuffer, fSize, 0)) < 0) 
     {
-        perror("Error receiving message after DWLD sent\n");
+        perror("Error receiving the DWLD file\n");
+        free(fBuffer);
         close(s);
         exit(1);
     }
 
+    printf("received file\n");
+    // stop timer
+    gettimeofday(&et,NULL);
+    double elapsed = (((et.tv_sec - st.tv_sec) * 1000000) + (et.tv_usec - st.tv_usec));
+    printf("%d bytes transferred in %f microseconds or %f seconds : %f MegaBytes/sec\n", rSize, elapsed, elapsed / 1000000, (double)rSize / elapsed);
+
+    printf("opening file to write to\n");
     FILE *fp = fopen(inputFile, "w");
-    if (fwrite(fBuffer, 1, fSize, fp) != fSize) {
-        perror("ERROR: UPLD: write error\n");
+    if (fwrite(fBuffer, 1, fSize, fp) < 0) {
+        perror("ERROR: DWL: writing download file to client\n");
+        free(fBuffer);
         close(s);
         fclose(fp);
         exit(1);
     }
     fclose(fp);
-
+    free(fBuffer);
     return 0;
 }
 
