@@ -145,11 +145,14 @@ int list(int client)
     char* dirEnts[BUF_SIZE];
     uint32_t ents = 0;
 
+    printf("Beginnning to list dir\n");
+
     if (dp != NULL) {
         struct stat fileStat;
         char permString[9];
         while ((ep = readdir(dp))) {
             if (stat(ep->d_name, &fileStat) < 0) { return 1; }
+            printf("File statted\n");
             bzero(permString, sizeof(permString));
             octalToString(fileStat.st_mode, permString);
 
