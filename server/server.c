@@ -51,6 +51,8 @@ void octalToString(int octalNum, char* resultString)
     strcpy(resultString, perms[2]);
     strcat(resultString, perms[1]);
     strcat(resultString, perms[0]);
+
+    printf("Perm function finished\n");
 }
 
 int download(int client)
