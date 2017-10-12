@@ -303,7 +303,7 @@ int deleteDir(int client)
         if (sendData(client, "-1", strlen("-1")) == -1) { return -1; }
         return 1;
     } else {
-        if (sendData(client, "1", strlen("1")) == -1;) { return -1; }
+        if (sendData(client, "1", strlen("1")) == -1) { return -1; }
     }
     closedir(dir);
    
