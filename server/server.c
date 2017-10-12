@@ -143,8 +143,7 @@ int list(int client)
     dp = opendir(currDir);
 
     char* dirEnts[BUF_SIZE];
-    int ents = 0;
-    int entSize = 0;
+    uint32_t ents = 0;
 
     if (dp != NULL) {
         struct stat fileStat;
@@ -162,14 +161,15 @@ int list(int client)
             strcat(fileInfoString, ep->d_name);
             
             dirEnts[0] = strdup(fileInfoString);
-            ents++; entSize += strlen(fileInfoString);
+            printf("%s\n", fileInfoString);
+            ents++; 
         }
         closedir(dp);
     }
    
     char dirSizeBuffer[BUF_SIZE];
     bzero(dirSizeBuffer, sizeof(dirSizeBuffer));
-    sprintf(dirSizeBuffer, "%d", entSize); 
+    sprintf(dirSizeBuffer, "%" PRIu32, htonl(ents)); 
     sendData(client, dirSizeBuffer, strlen(dirSizeBuffer));
 
     int i;
