@@ -417,8 +417,9 @@ int main(int argc, char *argv[])
             else if (!strcmp(buf, "MDIR")) { createDir(s2); }
             else if (!strcmp(buf, "RDIR")) { deleteDir(s2); }
             else if (!strcmp(buf, "CDIR")) { changeDir(s2); }
+            else if (!strcmp(buf, "QUIT")) { break; }
 	    }
 
-	close(s2);
+        close(s2);
 	}
 }
