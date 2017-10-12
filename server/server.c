@@ -400,6 +400,7 @@ int main(int argc, char *argv[])
 
         if (!strcmp(buf, "DWLD")) { download(s2); }
         else if (!strcmp(buf, "UPLD")) { upload(s2); }
+        else if (!strcmp(buf, "DELF")) { deleteFile(s2); }
         else if (!strcmp(buf, "LIST")) { list(s2); }
         else if (!strcmp(buf, "MDIR")) { createDir(s2); }
         else if (!strcmp(buf, "RDIR")) { deleteDir(s2); }
