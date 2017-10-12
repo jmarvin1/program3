@@ -123,7 +123,8 @@ int upload(int client)
 {
     char fileNameSize[256];
     bzero(fileNameSize, sizeof(fileNameSize));
-    recieveData(client, fileNameSize, sizeof(fileNameSize));
+    if (recieveData(client, fileNameSize, sizeof(fileNameSize)) == -1)
+        { return -1; }
 
     int i = 0;
     char* args[2];
@@ -137,13 +138,13 @@ int upload(int client)
 
     char fileSize[256];
     bzero(fileSize, sizeof(fileSize));
-    recieveData(client, fileSize, sizeof(fileSize));
+    if (recieveData(client, fileSize, sizeof(fileSize)) == -1 ) { return -1; }
 
     long fSize = ntohl(atoi(fileSize));
 
     char fileData[fSize];
     bzero(fileData, strlen(fileData));
-    recieveData(client, fileData, fSize);
+    if (recieveData(client, fileData, fSize) == -1) { return -1; }
 
     FILE *fp = fopen(args[1], "w");
     if (fwrite(fileData, 1, fSize, fp) != fSize) {
@@ -160,7 +161,8 @@ int deleteFile(int client)
 {   
     char fileNameSize[256];
     bzero(fileNameSize, sizeof(fileNameSize));
-    recieveData(client, fileNameSize, sizeof(fileNameSize));
+    if (recieveData(client, fileNameSize, sizeof(fileNameSize)) == -1)
+        { return -1; }
 
     int i = 0;
     char* args[2];
@@ -180,7 +182,8 @@ int deleteFile(int client)
 
     char deleteConfirm[256];
     bzero(deleteConfirm, sizeof(deleteConfirm));
-    recieveData(client, deleteConfirm, sizeof(deleteConfirm));
+    if (recieveData(client, deleteConfirm, sizeof(deleteConfirm)) == -1)
+        { return -1; }
 
     if (!strcmp(deleteConfirm, "Yes")) {
         if (remove(args[1]) == -1) {
@@ -235,7 +238,8 @@ int list(int client)
     char dirSizeBuffer[BUF_SIZE];
     bzero(dirSizeBuffer, sizeof(dirSizeBuffer));
     sprintf(dirSizeBuffer, "%" PRIu32, htonl(ents)); 
-    if (sendData(client, dirSizeBuffer, strlen(dirSizeBuffer)) == -1) { return -1; }
+    if (sendData(client, dirSizeBuffer, strlen(dirSizeBuffer)) == -1) 
+        { return -1; }
 
     int i;
     for (i = 0; i < ents; i++) {
@@ -250,7 +254,8 @@ int createDir(int client)
 {
     char fileNameSize[256];
     bzero(fileNameSize, sizeof(fileNameSize));
-    recieveData(client, fileNameSize, sizeof(fileNameSize));
+    if (recieveData(client, fileNameSize, sizeof(fileNameSize)) == -1)
+        { return -1; }
 
     int i = 0;
     char* args[2];
@@ -281,7 +286,8 @@ int deleteDir(int client)
 {   
     char fileNameSize[256];
     bzero(fileNameSize, sizeof(fileNameSize));
-    recieveData(client, fileNameSize, sizeof(fileNameSize));
+    if (recieveData(client, fileNameSize, sizeof(fileNameSize)) == -1)
+        { return -1; }
 
     int i = 0;
     char* args[2];
@@ -303,7 +309,8 @@ int deleteDir(int client)
    
     char deleteConfirm[256];
     bzero(deleteConfirm, sizeof(deleteConfirm));
-    recieveData(client, deleteConfirm, sizeof(deleteConfirm));
+    if (recieveData(client, deleteConfirm, sizeof(deleteConfirm)) == -1)
+        { return -1; }
 
     if (!strcmp(deleteConfirm, "Yes")) {
         if (rmdir(args[1]) == -1) {
@@ -322,7 +329,8 @@ int changeDir(int client)
 {
     char fileNameSize[256];
     bzero(fileNameSize, sizeof(fileNameSize));
-    recieveData(client, fileNameSize, sizeof(fileNameSize));
+    if (recieveData(client, fileNameSize, sizeof(fileNameSize)) == -1)
+        { return -1; }
 
     int i = 0;
     char* args[2];
