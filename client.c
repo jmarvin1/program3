@@ -274,11 +274,11 @@ int list(int s)
         	close(s);
        		exit(1);
     	}
-        printf("%s",lBuffer);
+        printf("%s\n",lBuffer);
         fflush(stdout);
     } 
     printf("END OF LIST!!!\n\n");
-    fflush(stdout);
+    
     return 0;
 }
 
