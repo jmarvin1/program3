@@ -18,10 +18,24 @@
 #define BUF_SIZE 8128
 
 int sendData(int client, char* data, int len)
-{ return send(client, data, len, 0); }
+{ 
+    int size;
+    if (size = send(client, data, len, 0) < 0) {
+       printf("ERROR: send error\n");
+       return -1;
+    }
+    return size; 
+}
 
 int recieveData(int client, char* buf, int len)
-{ return recv(client, buf, len, 0); }
+{ 
+    int size;
+    if (size = recv(client, buf, len, 0) < 0) {
+        printf("ERROR: recieve error\n");
+        return -1;
+    }
+    return size;
+}
 
 void octalToString(mode_t octalNum, char* resultString)
 {
@@ -72,7 +86,7 @@ int download(int client)
     if (access(args[1], F_OK) == -1 ) {
         printf("ERROR: file doesn't exist\n");
         char failed[BUF_SIZE];
-        sendData(client, "-1", strlen("-1"));
+        if (sendData(client, "-1", strlen("-1")) == -1) { return -1; }
         return 1;
     }
 
@@ -89,7 +103,7 @@ int download(int client)
     printf("sending file size\n");
     printf("file size: %s", sizeFile);
     printf("size if file size: %d\n", strlen(sizeFile));    
-    sendData(client, sizeFile, strlen(sizeFile));
+    if (sendData(client, sizeFile, strlen(sizeFile)) == -1) { return -1; }
 
     //char fileData[fSize];
     
@@ -100,7 +114,7 @@ int download(int client)
     //printf("File: %s\n", fileData);
 
     printf("sending\n");
-    sendData(client, fileData, fSize);
+    if (sendData(client, fileData, fSize) == -1) { return -1; }
     free(fileData);
     return fclose(fp);
 }
@@ -119,7 +133,7 @@ int upload(int client)
 
     short fNameSize = ntohs(atoi(args[0]));
 
-    sendData(client, "ACK", strlen("ACK"));
+    if (sendData(client, "ACK", strlen("ACK")) == -1) { return -1; }
 
     char fileSize[256];
     bzero(fileSize, sizeof(fileSize));
@@ -137,7 +151,7 @@ int upload(int client)
         exit(1);
     }
 
-    sendData(client, "ACK", strlen("ACK"));
+    if (sendData(client, "ACK", strlen("ACK")) == -1) { return -1; }
 
     return fclose(fp);
 }
@@ -158,10 +172,10 @@ int deleteFile(int client)
 
     if (access(args[1], F_OK) == -1 ) {
         printf("ERROR: file doesn't exist\n");
-        sendData(client, "-1", strlen("-1"));
+        if (sendData(client, "-1", strlen("-1")) == -1) { return -1; }
         return 1;
     } else {
-        sendData(client, "1", strlen("1"));
+        if (sendData(client, "1", strlen("1")) == -1) { return -1; }
     }
 
     char deleteConfirm[256];
@@ -171,10 +185,10 @@ int deleteFile(int client)
     if (!strcmp(deleteConfirm, "Yes")) {
         if (remove(args[1]) == -1) {
             printf("ERROR: error deleting file\n");
-            sendData(client, "-1", strlen("-1"));
+            if (sendData(client, "-1", strlen("-1")) == -1) { return -1; }
             return 1;
         }
-        sendData(client, "1", strlen("1"));
+        if (sendData(client, "1", strlen("1")) == -1) { return -1; }
     }
 
     return 1;
@@ -221,12 +235,12 @@ int list(int client)
     char dirSizeBuffer[BUF_SIZE];
     bzero(dirSizeBuffer, sizeof(dirSizeBuffer));
     sprintf(dirSizeBuffer, "%" PRIu32, htonl(ents)); 
-    sendData(client, dirSizeBuffer, strlen(dirSizeBuffer));
+    if (sendData(client, dirSizeBuffer, strlen(dirSizeBuffer)) == -1) { return -1; }
 
     int i;
     for (i = 0; i < ents; i++) {
         printf("%s\n", dirEnts[i]);
-        sendData(client, dirEnts[i], strlen(dirEnts[i]));
+        if (sendData(client, dirEnts[i], strlen(dirEnts[i])) == -1) { return -1; }
     }
 
     return 1;
@@ -248,17 +262,17 @@ int createDir(int client)
 
     if (access(args[1], F_OK) == 0) {
         printf("ERROR: file already exists\n");
-        sendData(client, "-2", strlen("-2"));
+        if (sendData(client, "-2", strlen("-2")) == -1) { return -1; }
         return 1;
     }
     
     if (mkdir(args[1], 0666) == -1) {
         printf("ERROR: error creating directory\n");
-        sendData(client, "-1", strlen("-1"));
+        if (sendData(client, "-1", strlen("-1")) == -1) { return -1; }
         return 1;
     }
 
-    sendData(client, "1", strlen("1"));
+    if (sendData(client, "1", strlen("1")) == -1) { return -1; }
 
     return 1;
 }
@@ -280,10 +294,10 @@ int deleteDir(int client)
     DIR* dir = opendir(args[1]);
     if (ENOENT == errno) {
         printf("ERROR: directory does not exist\n");
-        sendData(client, "-1", strlen("-1"));
+        if (sendData(client, "-1", strlen("-1")) == -1) { return -1; }
         return 1;
     } else {
-        sendData(client, "1", strlen("1"));
+        if (sendData(client, "1", strlen("1")) == -1;) { return -1; }
     }
     closedir(dir);
    
@@ -295,10 +309,10 @@ int deleteDir(int client)
         if (rmdir(args[1]) == -1) {
             printf("ERROR: error deleting directory\n");
             printf("ERROR: is the directory empty?\n");
-            sendData(client, "-1", strlen("-1"));
+            if (sendData(client, "-1", strlen("-1")) == -1) { return -1; }
             return 1;
         }
-        sendData(client, "1", strlen("1"));
+        if (sendData(client, "1", strlen("1")) == -1) { return -1; }
     }
 
     return 1;
@@ -321,14 +335,14 @@ int changeDir(int client)
     DIR* dir = opendir(args[1]);
     if (errno == ENOENT) {
         printf("ERROR: directory does not exist\n");
-        sendData(client, "-2", strlen("-2"));
+        if (sendData(client, "-2", strlen("-2")) == -1) { return -1; }
         return 1;
     }
     closedir(dir);
 
     if (chdir(args[1]) == -1) {
         printf("ERROR: error changing directory\n");
-        sendData(client, "-1", strlen("-1"));
+        if (sendData(client, "-1", strlen("-1")) == -1) { return -1; }
         return 1;
     }
 
