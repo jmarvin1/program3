@@ -215,6 +215,7 @@ int upld(int s)
 
 int list(int s)
 {
+    //Send the action command to the server
     int sizeSent;
     char action [BUFFER] = "LIST\0";
     if ((sizeSent = send(s, action, strlen(action), 0)) < 0)
@@ -223,7 +224,8 @@ int list(int s)
         close(s);
         exit(1);
     }
-
+    
+    //receive the size of directory  
     int rSize;
     char rBuffer[BUFFER];
     if ((rSize = recv(s, rBuffer, BUFFER, 0)) <= 0) 
@@ -232,17 +234,19 @@ int list(int s)
         close(s);
         exit(1);
     }
-
+    int i;
     uint32_t sizeOfList = ntohl(atoi(rBuffer));
-    char lBuffer[(int)sizeOfList]; 
-    if ((rSize = recv(s, lBuffer, strlen(lBuffer), 0)) <= 0) 
-    {
-        perror("Error receiving size of incoming directory listing\n");
-        close(s);
-        exit(1);
-    }
-
-    printf("%s\n", lBuffer);
+    char lBuffer[(int)sizeOfList];
+    for(i=0; i<sizeOfList; i++)
+    { 
+        if ((rSize = recv(s, lBuffer, strlen(lBuffer), 0)) <= 0) 
+    	{
+        	perror("Error receiving size of incoming directory listing\n");
+        	close(s);
+       		exit(1);
+    	}
+        printf("%s\n",lBuffer);
+    } 
     return 0;
 }
 
