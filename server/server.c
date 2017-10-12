@@ -23,7 +23,7 @@ int sendData(int client, char* data, int len)
 int recieveData(int client, char* buf, int len)
 { return recv(client, buf, len, 0); }
 
-void octalToString(int octalNum, char* resultString)
+void octalToString(mode_t octalNum, char* resultString)
 {
     printf("meow\n");
     char octalString[4];
