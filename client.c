@@ -236,16 +236,18 @@ int list(int s)
     }
     int i;
     uint32_t sizeOfList = ntohl(atoi(rBuffer));
-    char lBuffer[(int)sizeOfList];
+    char lBuffer[BUFFER];
+    printf("%d size of list\n",sizeOfList);
     for(i=0; i<sizeOfList; i++)
     { 
-        if ((rSize = recv(s, lBuffer, strlen(lBuffer), 0)) <= 0) 
+        bzero(lBuffer, BUFFER);
+        if (recv(s, lBuffer, sizeof(lBuffer), 0) < 0) 
     	{
-        	perror("Error receiving size of incoming directory listing\n");
+        	perror("Error receiving  directory listing\n");
         	close(s);
        		exit(1);
     	}
-        printf("%s\n",lBuffer);
+        printf("%s",lBuffer);
     } 
     return 0;
 }
@@ -282,7 +284,7 @@ int delf(int s)
 
 	int rSize;
     	char rBuffer[BUFFER];
-    	if ((rSize = recv(s, rBuffer, BUFFER, 0)) <= 0) 
+    	if ((rSize = recv(s, rBuffer, BUFFER, 0)) < 0) 
     	{
         	perror("Error receiving whether or not file exists\n");
         	close(s);
@@ -293,18 +295,18 @@ int delf(int s)
 	{
 		//file exists 
 		char request[BUFFER];
-		printf("The file exists. Are you sure you want to delete the file?(yes,no)\n");
+		printf("The file exists. Are you sure you want to delete the file?(Y,N)\n");
 		scanf("%s",request);
 		//sending confirmation
-		if(strcmp(request,"no")==0)
+		if(strcmp(request,"N")==0)
 		{
 			printf("Delete abandoned by user\n");
 			close(s);
 			return 0;
 		}
-		else if(strcmp(request,"yes")==0)
+		else if(strcmp(request,"Y")==0)
 		{
-			if((sizeSent= send(s, "yes\0", strlen("yes\0"),0))<=0)
+			if((sizeSent= send(s, "Yes", strlen("Yes"),0))<=0)
 			{
 				perror("Error sending the delete confirmation");
 				close(s);
@@ -344,7 +346,65 @@ int delf(int s)
 
 }		
   
- 	
+int mdir(int s)
+{
+    //send action 
+    int sizeSent;
+	char action [BUFFER] = "MDIR\0";
+    	if ((sizeSent = send(s, action, strlen(action), 0)) < 0)
+    	{
+        	perror("Error sending action MDIR\n");
+        	close(s);
+        	exit(1);
+    	}
+    //get name of dir    
+	char dirName[BUFFER];
+	printf("Enter the name of the directory to be created:\n");
+	scanf("%s",dirName);
+    //get in appr format 
+    short int dirnameLength = (short int)strlen(dirName);
+	uint16_t sizeOfName = htons(dirnameLength);
+    char sizeName[BUFFER];
+    sprintf(sizeName, "%" PRIu16, sizeOfName);
+    strcat(sizeName, ",");
+    strcat(sizeName, dirName);
+    strcat(sizeName, "\0");
+    //send size and name of dir
+    if ((sizeSent = send(s, sizeName, strlen(sizeName), 0)) < 0)
+    {
+        perror("Error sending sizeName\n");
+        close(s);
+        exit(1);
+    }
+    //receive the confirmation from the server
+    int cSize;
+    char confirmBuff[BUFFER];
+
+    if((cSize = recv(s,confirmBuff, BUFFER, 0))<0)
+    {
+       perror("Error receiving directory confirmation");
+       close(s);
+       exit(1);
+    }
+
+    if(strcmp(confirmBuff,"1")==0)
+    {
+        printf("Directory successfully made\n");
+        return 0;
+    }
+    else if(strcmp(confirmBuff,"-2")==0)
+    {
+        printf("Directory already exists on the server\n");
+        return 0;
+    }
+    else if(strcmp(confirmBuff, "-1")==0)
+    {
+        printf("Error making directory\n");
+        return 0;
+    }
+    return 0;
+}
+	
 
 int main(int argc, char * argv[])
 {
@@ -416,10 +476,12 @@ int main(int argc, char * argv[])
         else if (strcmp(inputAction, "LIST") == 0)
         {
             printf("LIST\n");
+            list(s);
         } 
         else if (strcmp(inputAction, "MDIR") == 0)
         {
             printf("MDIR\n");
+            mdir(s);
         } 
         else if (strcmp(inputAction, "RDIR") == 0)
         {
