@@ -12,6 +12,7 @@
 #include <stdint.h>
 #include <inttypes.h>
 #include <dirent.h>
+#include <errno.h>
 //Ports we can use 41028, 41029, 41030
 #define MAX_PENDING 10
 #define BUF_SIZE 8128
@@ -20,29 +21,29 @@ int sendData(int client, char* data, int len)
 { return send(client, data, len, 0); }
 
 int recieveData(int client, char* buf, int len)
-{ if (recv(client, buf, len, 0) < 0) {printf("ERROR: recieve\n");} }
+{ return recv(client, buf, len, 0); }
 
 void octalToString(int octalNum, char* resultString)
 {
-    char octalNum[4];
-    sprintf(octalNum, "%d", octalNum&0777);
-    octalNum = atoi(octalNum);
+    char octalString[4];
+    sprintf(octalString, "%d", octalNum&0777);
+    octalNum = atoi(octalString);
 
     char* perms[3];
 
     int i;
     for (i=0; i < 3; i++) {
-	switch(octalNum % 10) {
-	    case 0: perms[i] = "---"; break;
-	    case 1: perms[i] = "--x"; break;
-	    case 2: perms[i] = "-w-"; break;
-	    case 3: perms[i] = "-wx"; break;
-	    case 4: perms[i] = "r--"; break;
-	    case 5: perms[i] = "r-x"; break;
-	    case 6: perms[i] = "rw-"; break;
-	    case 7: perms[i] = "rwx"; break;
-	}
-	octalNum /= 10;
+        switch(octalNum % 10) {
+            case 0: perms[i] = "---"; break;
+            case 1: perms[i] = "--x"; break;
+            case 2: perms[i] = "-w-"; break;
+            case 3: perms[i] = "-wx"; break;
+            case 4: perms[i] = "r--"; break;
+            case 5: perms[i] = "r-x"; break;
+            case 6: perms[i] = "rw-"; break;
+            case 7: perms[i] = "rwx"; break;
+        }
+        octalNum /= 10;
     } 
     
     strcpy(resultString, perms[2]);
@@ -141,17 +142,17 @@ int list(int client)
     getcwd(currDir, sizeof(BUF_SIZE));
     dp = opendir(currDir);
 
+    char* dirEnts[BUF_SIZE];
+    int ents = 0;
+    int entSize = 0;
+
     if (dp != NULL) {
         struct stat fileStat;
         char permString[9];
-        char* dirEnts[BUF_SIZE];
-        int ents = 0;
-        int entSize = 0;
-
-        while (ep = readdir(dp)) {
-            if (stat(ep->d_name, &filestat) < 0) { return 1; }
+        while ((ep = readdir(dp))) {
+            if (stat(ep->d_name, &fileStat) < 0) { return 1; }
             bzero(permString, sizeof(permString));
-            octalToString(fileStat.st_mode, permstring);
+            octalToString(fileStat.st_mode, permString);
 
             char fileInfoString[strlen(ep->d_name) + 11];
             bzero(fileInfoString, sizeof(fileInfoString));
@@ -166,11 +167,12 @@ int list(int client)
         closedir(dp);
     }
    
-    char* dirSizeBuffer[BUF_SIZE];
+    char dirSizeBuffer[BUF_SIZE];
     bzero(dirSizeBuffer, sizeof(dirSizeBuffer));
     sprintf(dirSizeBuffer, "%d", entSize); 
     sendData(client, dirSizeBuffer, strlen(dirSizeBuffer));
 
+    int i;
     for (i = 0; i < ents; i++) {
         sendData(client, dirEnts[i], strlen(dirEnts[i]));
     }
@@ -237,7 +239,7 @@ int deleteDir(int client)
     bzero(deleteConfirm, sizeof(deleteConfirm));
     recieveData(client, deleteConfirm, sizeof(deleteConfirm));
 
-    if (!strcmp(buf, "Yes")) {
+    if (!strcmp(deleteConfirm, "Yes")) {
         if (rmdir(args[1]) == -1) {
             printf("ERROR: error deleting directory\n");
             printf("ERROR: is the directory empty?\n");
@@ -265,7 +267,7 @@ int changeDir(int client)
     short fNameSize = ntohs(atoi(args[0]));
 
     DIR* dir = opendir(args[1]);
-    if (ENOENT == errno) {
+    if (errno == ENOENT) {
         printf("ERROR: directory does not exist\n");
         sendData(client, "-2", strlen("-2"));
         return 1;
