@@ -176,7 +176,8 @@ int list(int client)
     struct dirent *ep;
     char currDir[BUF_SIZE];
 
-    getcwd(currDir, sizeof(BUF_SIZE));
+    getcwd(currDir, sizeof(currDir));
+
     dp = opendir(currDir);
 
     char* dirEnts[BUF_SIZE];
