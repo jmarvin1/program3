@@ -27,8 +27,8 @@ void octalToString(mode_t octalNum, char* resultString)
 {
     printf("meow\n");
     char octalString[4];
-    sprintf(octalString, "%d", octalNum&0777);
-    octalNum = atoi(octalString);
+    sprintf(octalString, "%3o", octalNum&0777);
+    int permNum = atoi(octalString);
 
     printf("cat\n");
     printf("%s\n", octalString);
@@ -36,7 +36,7 @@ void octalToString(mode_t octalNum, char* resultString)
 
     int i;
     for (i=0; i < 3; i++) {
-        switch(octalNum % 10) {
+        switch(permNum % 10) {
             case 0: perms[i] = "---"; break;
             case 1: perms[i] = "--x"; break;
             case 2: perms[i] = "-w-"; break;
@@ -46,7 +46,7 @@ void octalToString(mode_t octalNum, char* resultString)
             case 6: perms[i] = "rw-"; break;
             case 7: perms[i] = "rwx"; break;
         }
-        octalNum /= 10;
+        permNum /= 10;
     } 
     
     strcpy(resultString, perms[2]);
