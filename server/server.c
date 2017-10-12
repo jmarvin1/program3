@@ -151,16 +151,17 @@ int deleteFile(int client)
         printf("ERROR: file doesn't exist\n");
         sendData(client, "-1", strlen("-1"));
         return 1;
+    } else {
+        sendData(client, "1", strlen("1"));
     }
-       
+
     char deleteConfirm[256];
     bzero(deleteConfirm, sizeof(deleteConfirm));
     recieveData(client, deleteConfirm, sizeof(deleteConfirm));
 
     if (!strcmp(deleteConfirm, "Yes")) {
-        if (rmdir(args[1]) == -1) {
-            printf("ERROR: error deleting directory\n");
-            printf("ERROR: is the directory empty?\n");
+        if (remove(args[1]) == -1) {
+            printf("ERROR: error deleting file\n");
             sendData(client, "-1", strlen("-1"));
             return 1;
         }
