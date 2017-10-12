@@ -133,6 +133,43 @@ int upload(int client)
     return fclose(fp);
 }
 
+int deleteFile(int client)
+{   
+    char fileNameSize[256];
+    bzero(fileNameSize, sizeof(fileNameSize));
+    recieveData(client, fileNameSize, sizeof(fileNameSize));
+
+    int i = 0;
+    char* args[2];
+    char* token = strtok(fileNameSize, ",");
+    while (token != NULL)
+        { args[i] = strdup(token); i++; token=strtok(NULL, ","); }
+
+    short fNameSize = ntohs(atoi(args[0]));
+
+    if (access(args[1], F_OK) == -1 ) {
+        printf("ERROR: file doesn't exist\n");
+        sendData(client, "-1", strlen("-1"));
+        return 1;
+    }
+       
+    char deleteConfirm[256];
+    bzero(deleteConfirm, sizeof(deleteConfirm));
+    recieveData(client, deleteConfirm, sizeof(deleteConfirm));
+
+    if (!strcmp(deleteConfirm, "Yes")) {
+        if (rmdir(args[1]) == -1) {
+            printf("ERROR: error deleting directory\n");
+            printf("ERROR: is the directory empty?\n");
+            sendData(client, "-1", strlen("-1"));
+            return 1;
+        }
+        sendData(client, "1", strlen("1"));
+    }
+
+    return 1;
+}
+
 int list(int client)
 {
     DIR *dp;
@@ -150,6 +187,7 @@ int list(int client)
     if (dp != NULL) {
         struct stat fileStat;
         char permString[9];
+        printf("Directory opened\n");
         while ((ep = readdir(dp))) {
             if (stat(ep->d_name, &fileStat) < 0) { return 1; }
             printf("File statted\n");
@@ -168,6 +206,8 @@ int list(int client)
             ents++; 
         }
         closedir(dp);
+    } else {
+        return 1;
     }
    
     char dirSizeBuffer[BUF_SIZE];
@@ -355,6 +395,8 @@ int main(int argc, char *argv[])
             printf("ERROR: recieving\n");
             exit(1);
         }
+
+        printf("%s\n", buf);
 
         if (!strcmp(buf, "DWLD")) { download(s2); }
         else if (!strcmp(buf, "UPLD")) { upload(s2); }
