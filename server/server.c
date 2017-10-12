@@ -225,6 +225,7 @@ int list(int client)
             strcpy(fileInfoString, permString);
             strcat(fileInfoString, " ");
             strcat(fileInfoString, ep->d_name);
+            strcat(fileInfoString, "\0");
             
             dirEnts[ents] = strdup(fileInfoString);
             ents++; 
@@ -245,7 +246,6 @@ int list(int client)
     for (i = 0; i < ents; i++) {
         printf("%s\n", dirEnts[i]);
         if (sendData(client, dirEnts[i], strlen(dirEnts[i])) == -1) { return -1; }
-        sleep(0.5);
     }
 
     return 1;
