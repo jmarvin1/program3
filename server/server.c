@@ -25,10 +25,12 @@ int recieveData(int client, char* buf, int len)
 
 void octalToString(int octalNum, char* resultString)
 {
+    printf("meow\n");
     char octalString[4];
     sprintf(octalString, "%d", octalNum&0777);
     octalNum = atoi(octalString);
 
+    printf("cat\n");
     char* perms[3];
 
     int i;
