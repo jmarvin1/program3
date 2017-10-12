@@ -192,8 +192,11 @@ int list(int client)
         while ((ep = readdir(dp))) {
             if (stat(ep->d_name, &fileStat) < 0) { return 1; }
             printf("File statted\n");
+
             bzero(permString, sizeof(permString));
             octalToString(fileStat.st_mode, permString);
+
+            printf("Perms found\n");
 
             char fileInfoString[strlen(ep->d_name) + 11];
             bzero(fileInfoString, sizeof(fileInfoString));
