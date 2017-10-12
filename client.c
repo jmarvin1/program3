@@ -254,27 +254,31 @@ int list(int s)
     //receive the size of directory  
     int rSize;
     char rBuffer[BUFFER];
-    if ((rSize = recv(s, rBuffer, BUFFER, 0)) <= 0) 
+    if ((rSize = recv(s, rBuffer, BUFFER, 0)) < 0) 
     {
         perror("Error receiving size of incoming directory listing\n");
         close(s);
         exit(1);
     }
     int i;
+    int lSize;
     uint32_t sizeOfList = ntohl(atoi(rBuffer));
     char lBuffer[BUFFER];
     printf("%d size of list\n",sizeOfList);
     for(i=0; i<sizeOfList; i++)
     { 
         bzero(lBuffer, BUFFER);
-        if (recv(s, lBuffer, sizeof(lBuffer), 0) < 0) 
+        if ((lSize = recv(s, lBuffer, sizeof(lBuffer), 0)) < 0) 
     	{
         	perror("Error receiving  directory listing\n");
         	close(s);
        		exit(1);
     	}
         printf("%s",lBuffer);
+        fflush(stdout);
     } 
+    printf("END OF LIST!!!\n\n");
+    fflush(stdout);
     return 0;
 }
 
@@ -532,7 +536,7 @@ int main(int argc, char * argv[])
         	    close(s);
         	    exit(1);
     	    }
-    /       close(s);
+            close(s);
             return 0;
         } else {
             printf("error: improper action: try again\n");
