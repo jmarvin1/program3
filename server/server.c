@@ -207,7 +207,7 @@ int list(int client)
 
     dp = opendir(currDir);
 
-    char* dirEnts[BUF_SIZE];
+    char dirEnts[BUF_SIZE][512];
     uint32_t ents = 0;
 
     if (dp != NULL) {
@@ -227,7 +227,8 @@ int list(int client)
             strcat(fileInfoString, ep->d_name);
             strcat(fileInfoString, "\0");
             
-            dirEnts[ents] = strdup(fileInfoString);
+            bzero(dirEnts[ents], sizeof(dirEnts[ents]));
+            strcpy(dirEnts[ents], fileInfoString);
             ents++; 
         }
         closedir(dp);
@@ -245,9 +246,10 @@ int list(int client)
     int i;
     for (i = 0; i < ents; i++) {
         printf("%s\n", dirEnts[i]);
-        if (sendData(client, dirEnts[i], strlen(dirEnts[i])) == -1) { return -1; }
+        if (sendData(client, dirEnts[i], sizeof(dirEnts[i])) == -1) { return -1; }
     }
-
+    
+    printf("Done sending list data\n");
     return 1;
 }
 
@@ -355,6 +357,7 @@ int changeDir(int client)
         return 1;
     }
 
+    if (sendData(client, "1", strlen("1")) == -1) { return -1; }
     return 1;
 }
 
