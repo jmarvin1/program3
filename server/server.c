@@ -207,6 +207,7 @@ int list(int client)
         }
         closedir(dp);
     } else {
+        printf("Directory open failed\n");
         return 1;
     }
    
