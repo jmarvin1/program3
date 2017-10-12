@@ -31,6 +31,7 @@ void octalToString(int octalNum, char* resultString)
     octalNum = atoi(octalString);
 
     printf("cat\n");
+    printf("%s\n", octalString);
     char* perms[3];
 
     int i;
