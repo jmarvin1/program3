@@ -71,6 +71,7 @@ int dwld(int s)
     //char fBuffer[fSize];
     char *fBuffer = malloc(fSize);
     if (!fBuffer) {
+        printf("problem with malloc\n");
         close(s);
         exit(1);
     }
@@ -92,7 +93,7 @@ int dwld(int s)
     // stop timer
     gettimeofday(&et,NULL);
     double elapsed = (((et.tv_sec - st.tv_sec) * 1000000) + (et.tv_usec - st.tv_usec));
-    printf("%d bytes transferred in %f microseconds or %f seconds : %f MegaBytes/sec\n", rSize, elapsed, elapsed / 1000000, (double)rSize / elapsed);
+    printf("%d bytes transferred in %f microseconds or %f seconds : %f MegaBytes/sec\n", (int)fSize, elapsed, elapsed / 1000000, (double)rSize / elapsed);
 
     printf("opening file to write to\n");
     FILE *fp = fopen(inputFile, "w");

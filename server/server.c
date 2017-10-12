@@ -91,14 +91,17 @@ int download(int client)
     printf("size if file size: %d\n", strlen(sizeFile));    
     sendData(client, sizeFile, strlen(sizeFile));
 
-    char fileData[fSize];
+    //char fileData[fSize];
+    
+    char *fileData = malloc(fSize);
+    
     printf("reading from file\n");
     fread(fileData, fSize, 1, fp);
     //printf("File: %s\n", fileData);
 
     printf("sending\n");
     sendData(client, fileData, fSize);
-
+    free(fileData);
     return fclose(fp);
 }
 
@@ -387,33 +390,35 @@ int main(int argc, char *argv[])
 		perror("error listening");
 		exit(1);
 	}
-
-	while(1)
+	
+    while(1)
 	{
-		//accept the client
-		if((s2=accept(s, (struct sockaddr *)&sin, &len))<0)
-		{
-			perror("error accepting");
-			exit(1);
-		}
-
-        bzero(buf, strlen(buf));
-
-        if (recieveData(s2, buf, sizeof(buf)) < 0) {
-            printf("ERROR: recieving\n");
+        if((s2=accept(s, (struct sockaddr *)&sin, &len))<0)
+        {
+            perror("error accepting");
             exit(1);
         }
+        
+    
+        while(1)
+        {         
+            bzero(buf, strlen(buf));
+            if (recieveData(s2, buf, sizeof(buf)) < 0) {
+                printf("ERROR: recieving\n");
+                exit(1);
+            }
 
-        printf("%s\n", buf);
+            printf("%s\n", buf);
 
-        if (!strcmp(buf, "DWLD")) { download(s2); }
-        else if (!strcmp(buf, "UPLD")) { upload(s2); }
-        else if (!strcmp(buf, "DELF")) { deleteFile(s2); }
-        else if (!strcmp(buf, "LIST")) { list(s2); }
-        else if (!strcmp(buf, "MDIR")) { createDir(s2); }
-        else if (!strcmp(buf, "RDIR")) { deleteDir(s2); }
-        else if (!strcmp(buf, "CDIR")) { changeDir(s2); }
-	
+            if (!strcmp(buf, "DWLD")) { download(s2); }
+            else if (!strcmp(buf, "UPLD")) { upload(s2); }
+            else if (!strcmp(buf, "DELF")) { deleteFile(s2); }
+            else if (!strcmp(buf, "LIST")) { list(s2); }
+            else if (!strcmp(buf, "MDIR")) { createDir(s2); }
+            else if (!strcmp(buf, "RDIR")) { deleteDir(s2); }
+            else if (!strcmp(buf, "CDIR")) { changeDir(s2); }
+	    }
+
 	close(s2);
 	}
 }
