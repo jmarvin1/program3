@@ -13,21 +13,14 @@
 
 #define BUFFER 8128
 
-/*unsigned int convert(char *st) {
-  char *x;
-  for (x = st ; *x ; x++) {
-      if (!isdigit(*x))
-        return 0L;
-    }
-  return (strtoul(st, 0L, 10));
-}
-*/
+//download function
 int dwld(int s)
 {
+    //get desired file name
     char  inputFile [BUFFER];   
     printf("Enter the file to download\n");
     scanf("%s", inputFile);
-    
+    //send action
     int sizeSent;
     char action [BUFFER] = "DWLD\0";
     if ((sizeSent = send(s, action, strlen(action), 0)) < 0)
@@ -36,7 +29,7 @@ int dwld(int s)
         close(s);
         exit(1);
     }
-
+    //get name and size in appropriate format
     char sizeName [BUFFER];
     short int tmpShort = (short int)strlen(inputFile);
     uint16_t sizeOfName = htons(tmpShort);
@@ -44,13 +37,14 @@ int dwld(int s)
     sprintf(sizeName, "%" PRIu16, sizeOfName);
     strcat(sizeName, ",");
     strcat(sizeName, inputFile);
+    //send name and size
     if ((sizeSent = send(s, sizeName, strlen(sizeName), 0)) < 0)
     {
         perror("Error sending sizeName\n");
         close(s);
         exit(1);
     }
-    printf("receiving file size\n");
+    //receive file size 
     int rSize;
     char rBuffer[BUFFER]; 
     if ((rSize = recv(s, rBuffer, BUFFER, 0)) < 0) 
@@ -59,28 +53,24 @@ int dwld(int s)
         close(s);
         exit(1);
     }
-    printf("here\n");
+    //create appropriate buffer size  
     long fSize = ntohl(atoi(rBuffer));
     if (atoi(rBuffer) == -1)
     {
         printf("File %s does not exist\n", inputFile);
         return 1;
     }
-    printf("here we go\n");
     printf("fSize: %d\n", (int)fSize);
-    //char fBuffer[fSize];
     char *fBuffer = malloc(fSize);
     if (!fBuffer) {
         printf("problem with malloc\n");
         close(s);
         exit(1);
     }
-    printf("we just made fBuffer\n");
     struct timeval st, et;
     // start timer
     gettimeofday(&st,NULL);
     
-    printf("receiving file\n");
     if ((rSize = recv(s, fBuffer, fSize, 0)) < 0) 
     {
         perror("Error receiving the DWLD file\n");
@@ -89,7 +79,6 @@ int dwld(int s)
         exit(1);
     }
 
-    printf("received file\n");
     // stop timer
     gettimeofday(&et,NULL);
     double elapsed = (((et.tv_sec - st.tv_sec) * 1000000) + (et.tv_usec - st.tv_usec));
@@ -109,16 +98,16 @@ int dwld(int s)
     return 0;
 }
 
-
+//upload function 
 int upld(int s)
 {
+    //get desired file to upload
     char uploadFile [BUFFER];
     
     printf("Enter the file to upload\n");
     
     scanf("%s", uploadFile); 
-    
-    printf("yeet: %s\n", uploadFile);
+   //check existence of the file 
     if( access( uploadFile, F_OK ) != 0 ) 
     {
         printf("file does not exist\n");
@@ -126,7 +115,7 @@ int upld(int s)
     } 
     
     FILE *fp = fopen(uploadFile, "r");
-    
+    //get contents of file
     if (fp == NULL)
     {
         fprintf(stderr, "cannot open file\n");
@@ -148,7 +137,7 @@ int upld(int s)
         printf("read is wrong\n");
         exit(1);
     }
-  
+  //send upld action
     int sizeSent;
     char action [BUFFER] = "UPLD\0";
     if ((sizeSent = send(s, action, strlen(action), 0)) < 0)
@@ -159,7 +148,7 @@ int upld(int s)
         fclose(fp);
         exit(1);
     }
-
+    //get name and size in appr format
     char sizeName [BUFFER];
     short int tmpShort = (short int)strlen(uploadFile);
     uint16_t sizeOfName = htons(tmpShort);
@@ -168,7 +157,7 @@ int upld(int s)
     strcat(sizeName, ",");
     strcat(sizeName, uploadFile);
     strcat(sizeName, "\0");
-    
+    //send name and size
     if ((sizeSent = send(s, sizeName, strlen(sizeName), 0)) < 0)
     {
         perror("Error sending sizeName\n");
@@ -238,7 +227,7 @@ int upld(int s)
     fclose(fp);
     return 0;
 }
-
+//LIST function
 int list(int s)
 {
     //Send the action command to the server
@@ -260,6 +249,7 @@ int list(int s)
         close(s);
         exit(1);
     }
+    //get list
     int i;
     int lSize;
     uint32_t sizeOfList = ntohl(atoi(rBuffer));
@@ -281,10 +271,11 @@ int list(int s)
     
     return 0;
 }
-
+//Delete function
 int delf(int s)
 {
-	int sizeSent;
+	//send delete action
+    int sizeSent;
 	char action [BUFFER] = "DELF\0";
     	if ((sizeSent = send(s, action, strlen(action), 0)) < 0)
     	{
@@ -296,7 +287,7 @@ int delf(int s)
 	printf("Enter the file to be deleted:\n");
 	scanf("%s",deleteFile);
 	
-	
+	//get name and size in appr format
 	short int filenameLength = (short int)strlen(deleteFile);
 	uint16_t sizeOfName = htons(filenameLength);
     	char sizeName[BUFFER];
@@ -304,7 +295,7 @@ int delf(int s)
     	strcat(sizeName, ",");
     	strcat(sizeName, deleteFile);
     	strcat(sizeName, "\0");
-    
+    //send name and size
     	if ((sizeSent = send(s, sizeName, strlen(sizeName), 0)) < 0)
     	{
         	perror("Error sending sizeName\n");
@@ -320,7 +311,7 @@ int delf(int s)
         	close(s);
         	exit(1);
     	}
-	
+	//check acknowledgement
 	if(strcmp(rBuffer, "1")==0)
 	{
 		//file exists 
@@ -351,7 +342,7 @@ int delf(int s)
 		close(s);
 		return 0;
 	}
-
+    //check final ack
 	int ackSize;
 	char ackBuffer[BUFFER];
 	if(( ackSize = recv(s, ackBuffer, BUFFER, 0))<0)
@@ -375,7 +366,7 @@ int delf(int s)
 
 
 }		
-  
+ //MDIR function 
 int mdir(int s)
 {
     //send action 
@@ -416,7 +407,7 @@ int mdir(int s)
        close(s);
        exit(1);
     }
-
+    //check ack
     if(strcmp(confirmBuff,"1")==0)
     {
         printf("Directory successfully made\n");
@@ -434,8 +425,139 @@ int mdir(int s)
     }
     return 0;
 }
-	
+//CDIR function
+int cdir(int s)
+{
+    //send action 
+    int sizeSent;
+	char action [BUFFER] = "CDIR\0";
+    	if ((sizeSent = send(s, action, strlen(action), 0)) < 0)
+    	{
+        	perror("Error sending action CDIR\n");
+        	close(s);
+        	exit(1);
+    	}
+    //get name of dir    
+	char dirName[BUFFER];
+	printf("Enter the name of the destination directory:\n");
+	scanf("%s",dirName);
+    //get in appr format 
+    short int dirnameLength = (short int)strlen(dirName);
+	uint16_t sizeOfName = htons(dirnameLength);
+    char sizeName[BUFFER];
+    sprintf(sizeName, "%" PRIu16, sizeOfName);
+    strcat(sizeName, ",");
+    strcat(sizeName, dirName);
+    strcat(sizeName, "\0");
+    //send size and name of dir
+    if ((sizeSent = send(s, sizeName, strlen(sizeName), 0)) < 0)
+    {
+        perror("Error sending sizeName\n");
+        close(s);
+        exit(1);
+    }
+    //receive the confirmation from the server
+    int cSize;
+    char confirmBuff[BUFFER];
 
+    if((cSize = recv(s,confirmBuff, BUFFER, 0))<0)
+    {
+       perror("Error receiving directory confirmation");
+       close(s);
+       exit(1);
+    }
+
+    if(strcmp(confirmBuff,"-1")==0)
+    {
+        printf("Error in changing directory\n");
+        return 0;
+    }
+    else if(strcmp(confirmBuff,"1")==0)
+    {
+        //directory changed
+        printf("Changed current directory\n"); 
+	    return 0;
+    }
+    else if(strcmp(confirmBuff,"-2")==0)
+    {
+        printf("The directory does not exist on the server\n");
+        return 0;
+    }
+    return 0;
+}
+//RDIR function
+int rdir(int s)
+{
+    //send action 
+    int sizeSent;
+	char action [BUFFER] = "RDIR\0";
+    	if ((sizeSent = send(s, action, strlen(action), 0)) < 0)
+    	{
+        	perror("Error sending action RDIR\n");
+        	close(s);
+        	exit(1);
+    	}
+    //get name of dir    
+	char dirName[BUFFER];
+	printf("Enter the name of the directory to be removed:\n");
+	scanf("%s",dirName);
+    //get in appr format 
+    short int dirnameLength = (short int)strlen(dirName);
+	uint16_t sizeOfName = htons(dirnameLength);
+    char sizeName[BUFFER];
+    sprintf(sizeName, "%" PRIu16, sizeOfName);
+    strcat(sizeName, ",");
+    strcat(sizeName, dirName);
+    strcat(sizeName, "\0");
+    //send size and name of dir
+    if ((sizeSent = send(s, sizeName, strlen(sizeName), 0)) < 0)
+    {
+        perror("Error sending sizeName\n");
+        close(s);
+        exit(1);
+    }
+    //receive the confirmation from the server
+    int cSize;
+    char confirmBuff[BUFFER];
+
+    if((cSize = recv(s,confirmBuff, BUFFER, 0))<0)
+    {
+       perror("Error receiving directory confirmation");
+       close(s);
+       exit(1);
+    }
+    //get ack
+    if(strcmp(confirmBuff,"-1")==0)
+    {
+        printf("Directory does not exist\n");
+        return 0;
+    }
+    else if(strcmp(confirmBuff,"1")==0)
+    {
+        //file exists 
+		char request[BUFFER];
+		printf("The file exists. Are you sure you want to delete the file?(Y,N)\n");
+		scanf("%s",request);
+		//sending confirmation
+		if(strcmp(request,"N")==0)
+		{
+			printf("Delete abandoned by user\n");
+			close(s);
+			return 0;
+		}
+		else if(strcmp(request,"Y")==0)
+		{
+			if((sizeSent= send(s, "Yes", strlen("Yes"),0))<=0)
+			{
+				perror("Error sending the delete confirmation");
+				close(s);
+			}
+			
+		}
+        return 0;
+    }
+    return 0;
+}
 int main(int argc, char * argv[])
 {
 	struct hostent *hp;
@@ -483,7 +605,7 @@ int main(int argc, char * argv[])
 		close(s);
 		exit(1);
 	}
-    
+    //prompts and function calls   
     while (1) 
     {
         printf("Enter a command to perform:\n\t");
@@ -516,15 +638,17 @@ int main(int argc, char * argv[])
         else if (strcmp(inputAction, "RDIR") == 0)
         {
             printf("RDIR\n");
+            rdir(s);
         } 
         else if (strcmp(inputAction, "CDIR") == 0)
         {
             printf("CDIR\n");
+            cdir(s);
         } 
         else if (strcmp(inputAction, "DELF") == 0)
         {
             printf("DELF\n");
-	    delf(s);
+	        delf(s);
         } 
         else if (strcmp(inputAction, "QUIT") == 0)
         {
