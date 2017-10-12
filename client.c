@@ -524,7 +524,15 @@ int main(int argc, char * argv[])
         } 
         else if (strcmp(inputAction, "QUIT") == 0)
         {
-            close(s);
+            int sizeSent;
+	        char action [BUFFER] = "QUIT\0";
+    	    if ((sizeSent = send(s, action, strlen(action), 0)) < 0)
+    	    {
+        	    perror("Error sending action MDIR\n");
+        	    close(s);
+        	    exit(1);
+    	    }
+    /       close(s);
             return 0;
         } else {
             printf("error: improper action: try again\n");
