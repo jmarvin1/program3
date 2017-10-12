@@ -25,13 +25,10 @@ int recieveData(int client, char* buf, int len)
 
 void octalToString(mode_t octalNum, char* resultString)
 {
-    printf("meow\n");
     char octalString[4];
     sprintf(octalString, "%3o", octalNum&0777);
     int permNum = atoi(octalString);
 
-    printf("cat\n");
-    printf("%s\n", octalString);
     char* perms[3];
 
     int i;
@@ -52,8 +49,6 @@ void octalToString(mode_t octalNum, char* resultString)
     strcpy(resultString, perms[2]);
     strcat(resultString, perms[1]);
     strcat(resultString, perms[0]);
-
-    printf("Perm function finished\n");
 }
 
 int download(int client)
@@ -210,7 +205,7 @@ int list(int client)
             strcat(fileInfoString, " ");
             strcat(fileInfoString, ep->d_name);
             
-            dirEnts[0] = strdup(fileInfoString);
+            dirEnts[ents] = strdup(fileInfoString);
             printf("%s\n", fileInfoString);
             ents++; 
         }
