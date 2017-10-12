@@ -183,20 +183,14 @@ int list(int client)
     char* dirEnts[BUF_SIZE];
     uint32_t ents = 0;
 
-    printf("Beginnning to list dir\n");
-
     if (dp != NULL) {
         struct stat fileStat;
         char permString[9];
-        printf("Directory opened\n");
         while ((ep = readdir(dp))) {
             if (stat(ep->d_name, &fileStat) < 0) { return 1; }
-            printf("File statted\n");
 
             bzero(permString, sizeof(permString));
             octalToString(fileStat.st_mode, permString);
-
-            printf("Perms found\n");
 
             char fileInfoString[strlen(ep->d_name) + 11];
             bzero(fileInfoString, sizeof(fileInfoString));
@@ -206,7 +200,6 @@ int list(int client)
             strcat(fileInfoString, ep->d_name);
             
             dirEnts[ents] = strdup(fileInfoString);
-            printf("%s\n", fileInfoString);
             ents++; 
         }
         closedir(dp);
@@ -222,6 +215,7 @@ int list(int client)
 
     int i;
     for (i = 0; i < ents; i++) {
+        printf("%s\n", dirEnts[i]);
         sendData(client, dirEnts[i], strlen(dirEnts[i]));
     }
 
