@@ -110,7 +110,6 @@ int upload(int client)
     char fileNameSize[256];
     bzero(fileNameSize, sizeof(fileNameSize));
     recieveData(client, fileNameSize, sizeof(fileNameSize));
-    printf("file name and size: %s\n", fileNameSize);
 
     int i = 0;
     char* args[2];
@@ -132,7 +131,6 @@ int upload(int client)
     bzero(fileData, strlen(fileData));
     recieveData(client, fileData, fSize);
 
-    printf("File name: %s\n", args[1]);
     FILE *fp = fopen(args[1], "w");
     if (fwrite(fileData, 1, fSize, fp) != fSize) {
         printf("ERROR: UPLD: write error\n");
