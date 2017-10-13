@@ -4,7 +4,11 @@ William Theisen (wtheisen)
 
 How to run the code: 
 
-1. enter the command 	make
+1. enter the command make this compiles the client
+2. enter the server directory and enter the command make, there will be warnings but no errors 
 2. to start the server on one machine run the command 	./myftpd [Port]
-3. to start the client on another machine run the command ./myftp Server_Name [Port] 
+3. to start the client on another machine run the command ./myftp Server_Name [Port]
+
+some test files are test1.txt LargeFile.txt
+a sample directory is "blue" inside the server directory 
  
