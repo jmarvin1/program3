@@ -252,11 +252,13 @@ int list(int s)
     //get list
     int i;
     int lSize;
+    int sSize;
     uint32_t sizeOfList = ntohl(atoi(rBuffer));
     char lBuffer[BUFFER];
     printf("%d size of list\n",sizeOfList);
     for(i=0; i<sizeOfList; i++)
     { 
+        //receive entry from directory
         bzero(lBuffer, BUFFER);
         if ((lSize = recv(s, lBuffer, sizeof(lBuffer), 0)) < 0) 
     	{
@@ -266,7 +268,15 @@ int list(int s)
     	}
         printf("%s\n",lBuffer);
         fflush(stdout);
+        //send ack to server
+        if ((sSize = send(s,"1",strlen("1"),0))<0)
+        {
+            perror("Error sending entry ack to server\n");
+            close(s);
+            exit(1);
+        }
     } 
+    bzero(rBuffer, sizeof(rBuffer));
     printf("END OF LIST!!!\n\n");
     
     return 0;
