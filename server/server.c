@@ -240,7 +240,7 @@ int list(int client)
     char dirSizeBuffer[BUF_SIZE];
     bzero(dirSizeBuffer, sizeof(dirSizeBuffer));
     sprintf(dirSizeBuffer, "%" PRIu32, htonl(ents));
-    printf("%s\n",dirSizeBuffer); 
+    //printf("%s\n",dirSizeBuffer); 
     if (sendData(client, dirSizeBuffer, strlen(dirSizeBuffer)) == -1) 
         { return -1; }
 
@@ -249,13 +249,13 @@ int list(int client)
     char rBuff[BUF_SIZE];
     bzero(rBuff,sizeof(rBuff));
     for (i = 0; i < ents; i++) {
-        printf("%s\n", dirEnts[i]);
+        //printf("%s\n", dirEnts[i]);
         if (sendData(client, dirEnts[i], sizeof(dirEnts[i])) == -1) { return -1; }
         if (recieveData(client, rBuff,sizeof(rBuff)) == -1) { return -1; }
         bzero(rBuff, sizeof(rBuff));
     }
     
-    printf("Done sending list data\n");
+    //printf("Done sending list data\n");
     return 1;
 }
 

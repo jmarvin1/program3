@@ -255,7 +255,7 @@ int list(int s)
     int sSize;
     uint32_t sizeOfList = ntohl(atoi(rBuffer));
     char lBuffer[BUFFER];
-    printf("%d size of list\n",sizeOfList);
+    //printf("%d size of list\n",sizeOfList);
     for(i=0; i<sizeOfList; i++)
     { 
         //receive entry from directory
@@ -277,7 +277,7 @@ int list(int s)
         }
     } 
     bzero(rBuffer, sizeof(rBuffer));
-    printf("END OF LIST!!!\n\n");
+    //printf("END OF LIST!!!\n\n");
     
     return 0;
 }
